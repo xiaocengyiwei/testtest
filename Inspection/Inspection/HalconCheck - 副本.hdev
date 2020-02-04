@@ -1,0 +1,4536 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<hdevelop file_version="1.1" halcon_version="12.0">
+<procedure name="main">
+<interface/>
+<body>
+<c></c>
+<c></c>
+<c></c>
+<l>global tuple g_IsMessageExit</l>
+<l>IsMessageExit:=1</l>
+<l>TestPath:='E:/git/tx/Simvision/bin'</l>
+<l>set_current_dir(TestPath)</l>
+<l>test:='实时图像4'</l>
+<l>CameraIndex:=0</l>
+<l>IsTain:=0</l>
+<l>ImageW:=4086</l>
+<l>ImageH:=1000</l>
+<c></c>
+<c></c>
+<l>imgpath:='E:/git/tx/实时图像4'</l>
+<l>MainTest (test, IsTain, ImageW, ImageH, CameraIndex, imgpath)</l>
+<c></c>
+</body>
+<docu id="main">
+<parameters/>
+</docu>
+</procedure>
+<procedure name="MainTest">
+<interface>
+<ic>
+<par name="TestName" base_type="ctrl" dimension="0"/>
+<par name="IsTain" base_type="ctrl" dimension="0"/>
+<par name="ImageW" base_type="ctrl" dimension="0"/>
+<par name="ImageH" base_type="ctrl" dimension="0"/>
+<par name="CameraIndex" base_type="ctrl" dimension="0"/>
+<par name="ImagePath" base_type="ctrl" dimension="0"/>
+</ic>
+</interface>
+<body>
+<c>* </c>
+<l>* global def tuple TestImagePath</l>
+<c>* </c>
+<l>dev_close_window ()</l>
+<l>dev_open_window (0, 0, 800, 800, 'black', WindowHandle)</l>
+<c>* </c>
+<l>create_message (MessageHandle1)</l>
+<l>InitGlobalOnce ()</l>
+<c></c>
+<l>reset_obj_db (5000, 5000, 0)</l>
+<c>* 初始化</c>
+<l>InitCheck (TestName, CameraIndex, ImageW, ImageH, MessageHandle)</l>
+<l>count_seconds (Seconds1)</l>
+<l>getallmessage (MessageHandle)</l>
+<l>count_seconds (Seconds2)</l>
+<l>sss := Seconds2-Seconds1</l>
+<c>* </c>
+<l>vGenParamNameVals := {[]}</l>
+<l>vGenParamNameVals.clear()</l>
+<l>dev_set_draw ('margin')</l>
+<l>gen_empty_obj (Objects)</l>
+<l>get_message_param (MessageHandle, 'message_keys', [], GenParamNames)</l>
+<l>for Index := 0 to |GenParamNames|-1 by 1</l>
+<l>    get_message_param (MessageHandle, 'key_data_type', GenParamNames[Index], GenParamType)</l>
+<l>    if (GenParamType=='tuple')</l>
+<l>        get_message_tuple (MessageHandle, GenParamNames[Index], TupleData1)</l>
+<l>        vGenParamNameVals.insert(vGenParamNameVals.length(),[GenParamNames[Index],TupleData1])</l>
+<l>    elseif (GenParamType=='object')</l>
+<l>        get_message_obj (ObjectData, MessageHandle, GenParamNames[Index])</l>
+<l>        concat_obj (Objects, ObjectData, Objects)</l>
+<l>        dev_display (ObjectData)</l>
+<l>    else</l>
+<c>        * </c>
+<l>    endif</l>
+<l>endfor</l>
+<l>stop ()</l>
+<c>* 检测或训练</c>
+<c>* </c>
+<l>if (IsTain==0)</l>
+<c>    * </c>
+<c>    * </c>
+<l>    list_files (ImagePath, ['files','follow_links','recursive'], ImageFiles)</l>
+<l>    open_file (ImagePath+'/'+TestName+'检测数据.csv', 'output', FileHandle)</l>
+<l>*     close_file (FileHandle)</l>
+<l>    tuple_regexp_select (ImageFiles, ['\\.(tif|tiff|gif|bmp|jpg|jpeg|jp2|png|pcx|pgm|ppm|pbm|xwd|ima|hobj)$','ignore_case'], ImageFiles)</l>
+<c>    * </c>
+<l>    for IndexSN := 0 to |ImageFiles|-1 by 1</l>
+<l>        read_image (Image, ImageFiles[IndexSN])</l>
+<l>        sssssssssss := {{}}</l>
+<l>        sssssssssss.insert(0,{[]})</l>
+<c>        * </c>
+<c>        * 预处理</c>
+<l>        count_seconds (Seconds1)</l>
+<c>        * </c>
+<l>        HCheck (Image, PreprocessImage, IndexSN, 1, WindowHandle, MessageHandle, ResultInfo, outLogInfo, FeatureValss)</l>
+<c>        </c>
+<c>        * </c>
+<c>  </c>
+<l>        count_seconds (Seconds2)</l>
+<l>*         stop()</l>
+<l>*         tuple_string (outLogInfo, '#', outLogInfo)</l>
+<l>*         logtxt := sum(outLogInfo)</l>
+<l>*         tuple_regexp_replace (ImageFiles[IndexSN], ImagePath, '', Result1)</l>
+<l>*         fwrite_string (FileHandle, ImageFiles[IndexSN]+',')</l>
+<l>*         fwrite_string (FileHandle, '检测时间：'+(Seconds2-Seconds1))</l>
+<l>*         fwrite_string (FileHandle, logtxt)</l>
+<l>*         get_image_size (PreprocessImage, Width, Height)</l>
+<l>*         disp_message (WindowHandle, ImageFiles[IndexSN], 'image', Height-100, 0, 'black', 'true')</l>
+<c>        * </c>
+<l>*         parse_filename (ImageFiles[IndexSN], BaseName, Extension, Directory)</l>
+<l>*         tuple_regexp_replace (Directory, ImagePath+'/', '', Result3)</l>
+<l>*         tuple_split (Result3, '/', Substrings1)</l>
+<c>        * </c>
+<l>*         savepath := ImagePath+'Test/'+TestName+'/'+ResultInfo</l>
+<l>*         tuple_split (savepath, '/', Substrings)</l>
+<l>*         create_nodes (Substrings, Path)</l>
+<l>*         savefile := Path+BaseName+'.'+Extension</l>
+<l>*         dump_window_image (dumpImage, WindowHandle)</l>
+<l>*         write_image (dumpImage, Extension, 0, savefile)</l>
+<l>*         fwrite_string (FileHandle, ','+savefile)</l>
+<c>        * </c>
+<l>*         fnew_line (FileHandle)</l>
+<c>        * </c>
+<l>    endfor</l>
+<l>    close_file (FileHandle)</l>
+<l>endif</l>
+<l>stop ()</l>
+<l>read_image (Image1, 'D:/cyw/0717img/实时图像6/MV-2E121MCQ1825A6-20191717-3-5-本体不良_20190717100850_4568770_176_16')</l>
+<l>count_seconds (Seconds1)</l>
+<l>PreprocessImage (Image1, PreprocessImage, MessageHandle)</l>
+<l>disp_image (PreprocessImage, WindowHandle)</l>
+<l>adsa := {[]}</l>
+<l>try</l>
+<l>    HCheck (PreprocessImage, PreprocessImage2, IndexSN, 1, WindowHandle, MessageHandle, ResultInfo, outLogInfo, FeatureValss1)</l>
+<l>catch (Exception)</l>
+<l>    ResultInfo := 'Error'</l>
+<l>    outLogInfo := Exception</l>
+<l>endtry</l>
+<l>count_seconds (Seconds2)</l>
+<l>stop ()</l>
+<l>if (IsTain)</l>
+<c>    * </c>
+<l>    TrainTestSvm (1, WindowHandle, MessageHandle, MessageHandle)</l>
+<c>    * </c>
+<c>    * </c>
+<l>*     TrainNewModel (MessageHandle, WindowHandle, ClassNames, ImagePaths)</l>
+<c>    * </c>
+<c>    * </c>
+<l>endif</l>
+<c>* </c>
+<l>stop ()</l>
+<c>* </c>
+<c>* 关闭</c>
+<l>CloseCheck (MessageHandle)</l>
+<c>* </c>
+<c>* </c>
+<c>* </c>
+<l>str[0] := 'Circle(200,200,100)'</l>
+<l>str[1] := 'circle_arc(200,200,100.5,0,3.14159)'</l>
+<l>str[2] := 'ellipse(200, 200, 0, 100, 60)'</l>
+<l>str[3] := 'ellipse_arc(200, 200, 0, 100, 60, 0, 3.14159)'</l>
+<l>str[4] := 'line(100,100,200,200)'</l>
+<l>str[5] := 'rectangle1(0,0,200,200)'</l>
+<l>str[6] := 'rectangle2(300, 200, 0, 100, 20)'</l>
+<c>* </c>
+<l>DrawIDs := []</l>
+<l>Params := []</l>
+<l>for Index := 0 to |str|-1 by 1</l>
+<l>    create_object_drawID (str[Index], DrawID)</l>
+<l>    DrawIDs := [DrawIDs,DrawID]</l>
+<l>    get_param_by_drawID (DrawID, ParamType, Paramstr, ParamNote, ParamData)</l>
+<l>    Params := [Params,Paramstr]</l>
+<l>endfor</l>
+<l>Resultstrs := ['ok','dsad','dasdas','dsad','dasdas','','dasdas','ok']</l>
+<l>GetResult (Resultstrs, ResultName, Resultstrs2)</l>
+<c>* </c>
+<l>* load_config_ValByType (TestPlanPath, CheckParam, 'CircleMax', 'circle', '1019,1386,568', CircleMaxstr)</l>
+<l>* gen_region_byTypeAndStr (CircleMax, 'circle', CircleMaxstr, vals)</l>
+<l>* set_message_obj (CircleMax, MessageHandle, 'CircleMax')</l>
+<l>* gen_region_by_str (Region, str, Type)</l>
+<c>* </c>
+<l>SaveImage (Image, '21321.jpg')</l>
+<c>* </c>
+<l>get_message_tuple_romove (MessageHandle, 'Result'+IndexSN, TupleData)</l>
+<c>* </c>
+<c>* </c>
+<c>* </c>
+<l>Format:='jpg'</l>
+<l>fillcolor:=0</l>
+<l>filename:='t'</l>
+<l>SaveImageThread (Image, Format, fillcolor, filename)</l>
+<c>* </c>
+<c></c>
+<l>return ()</l>
+</body>
+<docu id="MainTest">
+<parameters>
+<parameter id="CameraIndex"/>
+<parameter id="ImageH"/>
+<parameter id="ImagePath"/>
+<parameter id="ImageW"/>
+<parameter id="IsTain"/>
+<parameter id="TestName"/>
+</parameters>
+</docu>
+</procedure>
+<procedure name="create_nodes">
+<interface>
+<ic>
+<par name="Nodes" base_type="ctrl" dimension="0"/>
+</ic>
+<oc>
+<par name="Path" base_type="ctrl" dimension="0"/>
+</oc>
+</interface>
+<body>
+<l>mp := ''</l>
+<l>for Index := 0 to |Nodes|-1 by 1</l>
+<l>    mp := mp + Nodes[Index] + '/'</l>
+<l>    file_exists (mp, FileExists)</l>
+<l>    if (FileExists!=true)</l>
+<l>        make_dir (mp)</l>
+<l>    endif</l>
+<l>endfor</l>
+<c>* </c>
+<l>Path := mp</l>
+<l>return ()</l>
+</body>
+<docu id="create_nodes">
+<parameters>
+<parameter id="Nodes"/>
+<parameter id="Path"/>
+</parameters>
+</docu>
+</procedure>
+<procedure name="load_config">
+<interface>
+<ic>
+<par name="ParamSettingsFile" base_type="ctrl" dimension="0"/>
+<par name="section" base_type="ctrl" dimension="0"/>
+<par name="key" base_type="ctrl" dimension="0"/>
+<par name="Defaultval" base_type="ctrl" dimension="0"/>
+</ic>
+<oc>
+<par name="val" base_type="ctrl" dimension="0"/>
+</oc>
+</interface>
+<body>
+<l>val := ''</l>
+<l>file_exists (ParamSettingsFile, FileExists)</l>
+<l>if (FileExists==0)</l>
+<l>    parse_filename (ParamSettingsFile, BaseName, Extension, Directory)</l>
+<l>    tuple_split (Directory, '/', Substrings)</l>
+<l>    create_nodes (Substrings, Path)</l>
+<l>*     write_tuple (Defaultval, ParamSettingsFile)</l>
+<l>    ex_config_ini_create (ParamSettingsFile)</l>
+<l>else</l>
+<l>    ex_config_ini_read_str (ParamSettingsFile, section, key, '', val)</l>
+<l>endif</l>
+<l>if (val=='')</l>
+<l>    tuple_string (Defaultval, '#', Defaultval)</l>
+<l>    ex_config_ini_write_str (ParamSettingsFile, section, key, Defaultval)</l>
+<l>    val := Defaultval</l>
+<l>endif</l>
+<l>return ()</l>
+</body>
+<docu id="load_config">
+<parameters>
+<parameter id="Defaultval"/>
+<parameter id="ParamSettingsFile"/>
+<parameter id="key"/>
+<parameter id="section"/>
+<parameter id="val"/>
+</parameters>
+</docu>
+</procedure>
+<procedure name="InitCheck">
+<interface>
+<ic>
+<par name="TestName" base_type="ctrl" dimension="0"/>
+<par name="CameraIndex" base_type="ctrl" dimension="0"/>
+<par name="ImageW" base_type="ctrl" dimension="0"/>
+<par name="ImageH" base_type="ctrl" dimension="0"/>
+</ic>
+<oc>
+<par name="MessageHandle" base_type="ctrl" dimension="0"/>
+</oc>
+</interface>
+<body>
+<l>try</l>
+<l>    set_message_param (MessageHandle, 'remove_key', [], [])</l>
+<l>catch (Exception)</l>
+<l>    create_message (MessageHandle)</l>
+<l>endtry</l>
+<l>set_message_tuple (MessageHandle, 'TestName', TestName)</l>
+<l>set_message_tuple (MessageHandle, 'CameraIndex', CameraIndex)</l>
+<l>set_message_tuple (MessageHandle, 'ImageW', ImageW)</l>
+<l>set_message_tuple (MessageHandle, 'ImageH', ImageH)</l>
+<c>* halcon检测参数总路径</c>
+<l>get_current_dir (DirName)</l>
+<l>SystemPath := DirName+'/SystemConfiguration/system.ini'</l>
+<l>set_message_tuple (MessageHandle, 'SystemPath', SystemPath)</l>
+<c>* TestName+'_产品规格'</c>
+<c></c>
+<c>* 获取检测方案文件路径</c>
+<l>load_config (SystemPath, TestName, '当前方案ini', 'Setting\\ProductSN\\Parameters'+TestName+'.ini', CurrentScheme)</l>
+<l>parse_filename (CurrentScheme, BaseName, Extension, CurrentSchemePath)</l>
+<l>tuple_strstr (CurrentSchemePath, ':/', Position)</l>
+<l>if (Position[0]&gt;0)</l>
+<l>    set_message_tuple (MessageHandle, 'CurrentSchemePath', CurrentSchemePath)</l>
+<l>    set_message_tuple (MessageHandle, 'CurrentScheme', CurrentScheme)</l>
+<l>else</l>
+<l>    CurrentSchemePath := DirName+'/'+CurrentSchemePath</l>
+<l>    CurrentScheme := CurrentSchemePath+BaseName+'.'+Extension</l>
+<l>    set_message_tuple (MessageHandle, 'CurrentSchemePath', CurrentSchemePath)</l>
+<l>    set_message_tuple (MessageHandle, 'CurrentScheme', CurrentScheme)</l>
+<l>endif</l>
+<c>* </c>
+<c>* </c>
+<l>loglog (MessageHandle, true, '开始初始化参数')</l>
+<c>* </c>
+<c>* 根据index获取检测算法</c>
+<l>load_config (CurrentScheme, '方案', '检测方案', '不分类检测', CheckParam)</l>
+<l>set_message_tuple (MessageHandle, 'CheckParam', CheckParam)</l>
+<c>* </c>
+<c></c>
+<c>* </c>
+<l>load_config_keys_vals (SystemPath, 'ErrorIdentification', DefectNames, DefectVals)</l>
+<l>tuple_string (DefectNames, '#', DefectNames)</l>
+<l>tuple_string (DefectVals, '#', DefectVals)</l>
+<l>set_message_tuple (MessageHandle, 'DefectNames', DefectNames)</l>
+<l>set_message_tuple (MessageHandle, 'DefectVals', DefectVals)</l>
+<c></c>
+<c></c>
+<c>* 表面检测</c>
+<l>global tuple G_DEEP_REGION</l>
+<l>global tuple G_SHALLOW_REGION</l>
+<l>global tuple G_DEEP_REGION2</l>
+<l>global tuple G_SHALLOW_REGION2</l>
+<l>G_DEEP_REGION := 0</l>
+<l>G_SHALLOW_REGION := 1</l>
+<l>G_DEEP_REGION2 := 2</l>
+<l>G_SHALLOW_REGION2 := 3</l>
+<c>* </c>
+<c>* </c>
+<l>global tuple G_AREA_MAX</l>
+<l>G_AREA_MAX:=99999999</l>
+<l>AREA_MAX:=int(G_AREA_MAX)</l>
+<c></c>
+<c></c>
+<c>* </c>
+<c>* ['SystemPath']</c>
+<c>* [分辨率]</c>
+<l>load_config_set_message_Number (MessageHandle, SystemPath, TestName, '纵向分辨率', 'Resolution_H', 0.29, Resolution_H)</l>
+<l>load_config_set_message_Number (MessageHandle, SystemPath, TestName, '横向分辨率', 'Resolution_W', 0.38, Resolution_W)</l>
+<l>load_config_set_message_Number (MessageHandle, SystemPath, TestName, '分辨率', 'resolutionratio', 0.38, resolutionratio)</l>
+<c>* [基本参数]</c>
+<l>load_config_set_message_Number (MessageHandle, CurrentScheme, '基本参数', '单张记录数量', 'MaxReturnNum', 7, val)</l>
+<c></c>
+<c>*[ProductSetting][产品规格]</c>
+<l>ProductSetting:=DirName+'/SystemConfiguration/ProductSetting.ini'</l>
+<l>load_config_set_message_Number  (MessageHandle, ProductSetting, '产品规格', '直径', 'DiameterVal',18, DiameterVal)</l>
+<c></c>
+<l>load_config_set_message_Number  (MessageHandle, ProductSetting,  '产品规格', '直径容差', 'Diameter_offset',0.5, Diameter_offset)</l>
+<l>DiameterMinMax:=[DiameterVal-Diameter_offset,DiameterVal+Diameter_offset]</l>
+<l>set_message_tuple(MessageHandle, 'DiameterMinMax', DiameterMinMax)</l>
+<c></c>
+<l>load_config_set_message_Number  (MessageHandle, ProductSetting,  '产品规格', '导针间距', 'GuidepinVal',0.5, GuidepinVal)</l>
+<l>load_config_set_message_Number  (MessageHandle, ProductSetting,  '产品规格', '导针间距容差', 'Guidepin_offset',0.5, Guidepin_offset)</l>
+<l>GuidepinMinMax:=[GuidepinVal-Guidepin_offset,GuidepinVal+Guidepin_offset]</l>
+<l>set_message_tuple(MessageHandle, 'GuidepinMinMax', GuidepinMinMax)</l>
+<c></c>
+<l>load_config_set_message_Number  (MessageHandle, ProductSetting,  '产品规格', '导针高度容差', 'GuidepinHeightoffset',0.5, GuidepinHeightoffset)</l>
+<c></c>
+<l>load_config_set_message_Number(MessageHandle, ProductSetting,  '产品规格', '产品高度', 'ProductHeight', 25, ProductHeight)</l>
+<l>load_config_split( ProductSetting,  '产品规格', 'OCRSigns', 'uF|V', '|', OCRSigns)</l>
+<l>set_message_tuple( MessageHandle,'OCRSigns',OCRSigns)</l>
+<l>for Index1 := 0 to |OCRSigns|-1 by 1</l>
+<l>    load_config_set_message_Str(MessageHandle, ProductSetting, '产品规格', OCRSigns[Index1]+'值', OCRSigns[Index1]+'_val', '120', OCRval)</l>
+<c>    *方向(0,90,180,270)</c>
+<l>    load_config_set_message_Number (MessageHandle, ProductSetting, '产品规格', OCRSigns[Index1]+'方向', OCRSigns[Index1]+'_Direction', 0, OCRDirection)</l>
+<l>    load_config_number(ProductSetting, '产品规格', OCRSigns[Index1]+'_亮黑',0, val1)</l>
+<l>    if(val1==0)</l>
+<l>       set_message_tuple(MessageHandle, 'TextModel_polarity', 'light_on_dark')</l>
+<l>    else</l>
+<l>       set_message_tuple(MessageHandle, 'TextModel_polarity', 'dark_on_light')</l>
+<l>    endif</l>
+<l>endfor</l>
+<c>    </c>
+<c></c>
+<l>tuple_split(CheckParam, '_', lsCheckParam)</l>
+<c>*共享内存初始化</c>
+<l>Init_Python_Memory (CurrentScheme, 'InitPyMemory', MessageHandle)</l>
+<c></c>
+<l>if (lsCheckParam[0]=='不分类检测')</l>
+<l>    InitSurCheck (MessageHandle)</l>
+<l>elseif (lsCheckParam[0]=='MLP分类检测')</l>
+<c></c>
+<l>elseif (lsCheckParam[0]=='SVM分类检测')</l>
+<l>elseif (lsCheckParam[0]=='地板检测')</l>
+<l>    Init_FloorCheck (CurrentScheme, lsCheckParam, MessageHandle)</l>
+<l>elseif (lsCheckParam[0]=='底面检测')</l>
+<l>    Init_BottomSurfaceDetection (CurrentScheme, lsCheckParam, MessageHandle)</l>
+<l>elseif (lsCheckParam[0]=='底凸检测')   </l>
+<l>    Init_BottomConvexDetection (CurrentScheme, lsCheckParam, MessageHandle)</l>
+<l>elseif(lsCheckParam[0]=='顶面检测')</l>
+<l>    Init_TopSurfaceDetection (CurrentScheme, lsCheckParam, MessageHandle)</l>
+<l>elseif (lsCheckParam[0]=='侧面尺寸测量')   </l>
+<l>    Init_SideMeasurementDetection (CurrentScheme, lsCheckParam, MessageHandle)</l>
+<l>elseif(lsCheckParam[0]=='字符和瑕疵检测')</l>
+<l>    Init_OCRFlawDetection (CurrentScheme, lsCheckParam, DirName, MessageHandle)</l>
+<l>endif</l>
+<c>* </c>
+<l>loglog (MessageHandle, false, '完成参数初始化')</l>
+<l>return ()</l>
+<c></c>
+<c></c>
+<c></c>
+<c></c>
+<c></c>
+<c></c>
+<c></c>
+<c></c>
+<c></c>
+<c></c>
+<c></c>
+<c></c>
+<c></c>
+<c></c>
+<c></c>
+<c></c>
+<c></c>
+<c></c>
+<c></c>
+<c></c>
+<c></c>
+<c></c>
+<c></c>
+<c></c>
+<c></c>
+</body>
+<docu id="InitCheck">
+<parameters>
+<parameter id="CameraIndex"/>
+<parameter id="ImageH"/>
+<parameter id="ImageW"/>
+<parameter id="MessageHandle"/>
+<parameter id="TestName"/>
+</parameters>
+</docu>
+</procedure>
+<procedure name="CloseCheck">
+<interface>
+<ic>
+<par name="MessageInHandle" base_type="ctrl" dimension="0"/>
+</ic>
+</interface>
+<body>
+<c>* </c>
+<c>* </c>
+<l>get_message_param (MessageInHandle, 'message_keys', [], message_keys)</l>
+<l>tuple_regexp_select (message_keys, '_CloseClear', Selection)</l>
+<c>* </c>
+<l>for Index := 0 to |Selection|-1 by 1</l>
+<l>    tuple_regexp_replace (Selection[Index], '_CloseClear', '', Selection2)</l>
+<l>    get_message_param (MessageInHandle, 'key_exists', Selection2, key_exist)</l>
+<l>    if (key_exist==1)</l>
+<l>        get_message_tuple (MessageInHandle, Selection[Index], TupleData)</l>
+<l>        if (TupleData=='clear_deformable_model')</l>
+<l>            get_message_tuple (MessageInHandle, Selection2, TupleData1)</l>
+<l>            clear_deformable_model (TupleData1)</l>
+<l>        elseif (TupleData=='clear_shape_model')</l>
+<l>            get_message_tuple (MessageInHandle, Selection2, TupleData1)</l>
+<l>            clear_shape_model (TupleData1)</l>
+<l>        elseif (TupleData=='clear_ocr_class_mlp')</l>
+<l>            get_message_tuple (MessageInHandle, Selection2, TupleData1)</l>
+<l>            clear_ocr_class_mlp (TupleData1)</l>
+<l>        elseif (TupleData=='clear_text_model')</l>
+<l>            get_message_tuple (MessageInHandle, Selection2, TupleData1)</l>
+<l>            clear_text_model (TupleData1)</l>
+<l>        endif</l>
+<l>    endif</l>
+<l>endfor</l>
+<c>* </c>
+<c>* </c>
+<c>* </c>
+<l>clear_message (MessageInHandle)</l>
+<l>return ()</l>
+</body>
+<docu id="CloseCheck">
+<parameters>
+<parameter id="MessageInHandle"/>
+</parameters>
+</docu>
+</procedure>
+<procedure name="DreiFeatureExtract">
+<interface>
+<io>
+<par name="Image" base_type="iconic" dimension="0"/>
+</io>
+<ic>
+<par name="WindowHandle" base_type="ctrl" dimension="0"/>
+</ic>
+<oc>
+<par name="Feature" base_type="ctrl" dimension="0"/>
+</oc>
+</interface>
+<body>
+<c>* 由于背面图像胶管部分对比度不够高，所以直接提取图像中心区域m</c>
+<l>scale_image (Image, ImageScaled, 2, 0)</l>
+<l>threshold (ImageScaled, Region1, 150, 255)</l>
+<l>connection (Region1, ConnectedRegions)</l>
+<l>select_shape (ConnectedRegions, SelectedRegions, 'area', 'and', 50000, 9999999)</l>
+<l>count_obj (SelectedRegions, Number)</l>
+<l>if (Number==0)</l>
+<c>    * </c>
+<l>    Feature := [0,0,0,0,0,0,0]</l>
+<l>else</l>
+<l>    circularity (SelectedRegions, Circularity)</l>
+<c>    * Circularity是提取的第1个特征值</c>
+<c>    * </c>
+<l>    fill_up (SelectedRegions, RegionFillUp1)</l>
+<l>    dilation_circle (RegionFillUp1, RegionDilation1, 5)</l>
+<l>    reduce_domain (Image, RegionDilation1, ImageReduced1)</l>
+<c>    * 此处所得到的是中心亮片区域n</c>
+<c>    * </c>
+<c>    * 下面提取特征</c>
+<l>    intensity (ImageReduced1, Image, Mean, Deviation)</l>
+<c>    * Mean是第2个提取的特征值</c>
+<c>    * Dweviation是第3个提取的特征值</c>
+<l>    area_center (ImageReduced1, Area, Row, Column)</l>
+<c>    * Area是第4个提取的特征值</c>
+<l>    boundary (RegionDilation1, RegionBorder, 'inner')</l>
+<l>    convexity (ImageReduced1, Convexity1)</l>
+<c>    * Convexity1是第5个提取的特征值</c>
+<l>    contlength (RegionBorder, ContLength)</l>
+<c>    * contlength是第6个提取的特征值</c>
+<l>    compactness (ImageReduced1, Compactness)</l>
+<c>    * Compactness是第7个提取的特征值</c>
+<c>    * </c>
+<l>    Feature := [Circularity,Mean,Deviation,Area,Convexity1,ContLength,Compactness]</l>
+<l>endif</l>
+<c>* </c>
+<c>* </c>
+<l>return ()</l>
+</body>
+<docu id="DreiFeatureExtract">
+<parameters>
+<parameter id="Feature"/>
+<parameter id="Image"/>
+<parameter id="WindowHandle"/>
+</parameters>
+</docu>
+</procedure>
+<procedure name="load_config_number">
+<interface>
+<ic>
+<par name="ParamSettingsFile" base_type="ctrl" dimension="0"/>
+<par name="section" base_type="ctrl" dimension="0"/>
+<par name="key" base_type="ctrl" dimension="0"/>
+<par name="Defaultval" base_type="ctrl" dimension="0"/>
+</ic>
+<oc>
+<par name="val" base_type="ctrl" dimension="0"/>
+</oc>
+</interface>
+<body>
+<l>val := ''</l>
+<l>file_exists (ParamSettingsFile, FileExists)</l>
+<l>if (FileExists==0)</l>
+<l>    parse_filename (ParamSettingsFile, BaseName, Extension, Directory)</l>
+<l>    tuple_split (Directory, '/', Substrings)</l>
+<l>    create_nodes (Substrings, Path)</l>
+<l>*     write_tuple (Defaultval, ParamSettingsFile)</l>
+<l>    ex_config_ini_create (ParamSettingsFile)</l>
+<l>else</l>
+<l>    ex_config_ini_read_str (ParamSettingsFile, section, key, '', val)</l>
+<l>endif</l>
+<l>if (val=='')</l>
+<l>    tuple_string (Defaultval, '#', String)</l>
+<l>    ex_config_ini_write_str (ParamSettingsFile, section, key, String)</l>
+<l>    val := Defaultval</l>
+<l>endif</l>
+<l>tuple_number (val, val)</l>
+<l>return ()</l>
+</body>
+<docu id="load_config_number">
+<parameters>
+<parameter id="Defaultval">
+<sem_type>any</sem_type>
+</parameter>
+<parameter id="ParamSettingsFile"/>
+<parameter id="key"/>
+<parameter id="section"/>
+<parameter id="val">
+<sem_type>number</sem_type>
+</parameter>
+</parameters>
+</docu>
+</procedure>
+<procedure name="PreprocessImage">
+<interface>
+<io>
+<par name="Image" base_type="iconic" dimension="0"/>
+</io>
+<oo>
+<par name="PreprocessImage" base_type="iconic" dimension="0"/>
+</oo>
+<ic>
+<par name="MessageHandle" base_type="ctrl" dimension="0"/>
+</ic>
+</interface>
+<body>
+<l>try</l>
+<c>    * </c>
+<c>    * 图像预处理方式</c>
+<l>    get_message_tuple (MessageHandle, 'PreprocessType', PreprocessType)</l>
+<l>    if (PreprocessType==1)</l>
+<l>        mirror_image (Image, PreprocessImage, 'row')</l>
+<l>    elseif (PreprocessType==2)</l>
+<l>        mirror_image (Image, PreprocessImage, 'column')</l>
+<l>    elseif (PreprocessType==3)</l>
+<l>        rotate_image (Image, PreprocessImage, 90, 'constant')</l>
+<l>    elseif (PreprocessType==4)</l>
+<l>        rotate_image (Image, PreprocessImage, -90, 'constant')</l>
+<l>    elseif (PreprocessType==5)</l>
+<l>        mirror_image (Image, ImageMirror, 'row')</l>
+<l>        rotate_image (ImageMirror, PreprocessImage, -90, 'constant')</l>
+<l>    else</l>
+<l>        copy_image (Image, PreprocessImage)</l>
+<l>    endif</l>
+<l>catch (Exception)</l>
+<l>endtry</l>
+<l>return ()</l>
+</body>
+<docu id="PreprocessImage">
+<parameters>
+<parameter id="Image"/>
+<parameter id="MessageHandle"/>
+<parameter id="PreprocessImage"/>
+</parameters>
+</docu>
+</procedure>
+<procedure name="load_config_set_message_Number">
+<interface>
+<ic>
+<par name="MessageHandle" base_type="ctrl" dimension="0"/>
+<par name="ParamSettingsFile" base_type="ctrl" dimension="0"/>
+<par name="section" base_type="ctrl" dimension="0"/>
+<par name="Inikey" base_type="ctrl" dimension="0"/>
+<par name="MessageKey" base_type="ctrl" dimension="0"/>
+<par name="Defaultval" base_type="ctrl" dimension="0"/>
+</ic>
+<oc>
+<par name="val" base_type="ctrl" dimension="0"/>
+</oc>
+</interface>
+<body>
+<l>load_config_number (ParamSettingsFile, section, Inikey, Defaultval, val)</l>
+<l>MessageExit (MessageHandle, MessageKey, val, IsExit)</l>
+<c>* </c>
+<l>return ()</l>
+</body>
+<docu id="load_config_set_message_Number">
+<parameters>
+<parameter id="Defaultval">
+<sem_type>number</sem_type>
+</parameter>
+<parameter id="Inikey"/>
+<parameter id="MessageHandle"/>
+<parameter id="MessageKey"/>
+<parameter id="ParamSettingsFile"/>
+<parameter id="section"/>
+<parameter id="val">
+<sem_type>number</sem_type>
+</parameter>
+</parameters>
+</docu>
+</procedure>
+<procedure name="gen_region_by_str">
+<interface>
+<oo>
+<par name="Region" base_type="iconic" dimension="0"/>
+</oo>
+<ic>
+<par name="str" base_type="ctrl" dimension="0"/>
+</ic>
+<oc>
+<par name="Type" base_type="ctrl" dimension="0"/>
+</oc>
+</interface>
+<body>
+<l>gen_empty_region (Region)</l>
+<l>Type := ''</l>
+<l>tuple_split (str, '(', Substrings)</l>
+<l>tuple_split (Substrings, ')', Substrings)</l>
+<l>tuple_string (Substrings, '#', Substrings)</l>
+<l>if (|Substrings|==2)</l>
+<l>    tuple_split (Substrings[1], ',', Substrings1)</l>
+<l>    tuple_number (Substrings1, Number1)</l>
+<l>    if ((Substrings[0]=='Circle' or Substrings[0]=='circle') and  |Number1|&gt;=3)</l>
+<l>        gen_circle (Region, Number1[0], Number1[1], Number1[2])</l>
+<l>        Type := Substrings[0]</l>
+<l>    elseif ((Substrings[0]=='circle_arc') and  |Number1|&gt;=5)</l>
+<l>        gen_circle_sector (Region, Number1[0], Number1[1], Number1[2], Number1[3], Number1[4])</l>
+<l>        Type := Substrings[0]</l>
+<l>    elseif ((Substrings[0]=='Ellipse' or Substrings[0]=='ellipse') and  |Number1|&gt;=5)</l>
+<l>        gen_ellipse (Region, Number1[0], Number1[1], Number1[2], Number1[3], Number1[4])</l>
+<l>        Type := Substrings[0]</l>
+<l>    elseif ((Substrings[0]=='ellipse_arc') and  |Number1|&gt;=7)</l>
+<l>        gen_ellipse_sector (Region, Number1[0], Number1[1], Number1[2], Number1[3], Number1[4], Number1[5], Number1[6])</l>
+<l>        Type := Substrings[0]</l>
+<l>    elseif ((Substrings[0]=='Line' or Substrings[0]=='line') and  |Number1|&gt;=4)</l>
+<l>        gen_region_line (Region, Number1[0], Number1[1], Number1[2], Number1[3])</l>
+<l>        Type := Substrings[0]</l>
+<l>    elseif ((Substrings[0]=='rectangle1' or Substrings[0]=='rectangle1') and  |Number1|&gt;=4)</l>
+<l>        gen_rectangle1 (Region, Number1[0], Number1[1], Number1[2], Number1[3])</l>
+<l>        Type := Substrings[0]</l>
+<l>    elseif ((Substrings[0]=='rectangle2' or Substrings[0]=='rectangle2') and  |Number1|&gt;=5)</l>
+<l>        gen_rectangle2 (Region, Number1[0], Number1[1], Number1[2], Number1[3], Number1[4])</l>
+<l>        Type := Substrings[0]</l>
+<l>    endif</l>
+<l>endif</l>
+<l>return ()</l>
+</body>
+<docu id="gen_region_by_str">
+<parameters>
+<parameter id="Region"/>
+<parameter id="Type"/>
+<parameter id="str"/>
+</parameters>
+</docu>
+</procedure>
+<procedure name="UpFaceCheck">
+<interface>
+<io>
+<par name="Image" base_type="iconic" dimension="0"/>
+</io>
+<ic>
+<par name="MessageHandle" base_type="ctrl" dimension="0"/>
+<par name="WindowHandle" base_type="ctrl" dimension="0"/>
+</ic>
+<oc>
+<par name="Features" base_type="ctrl" dimension="0"/>
+<par name="IsTrue" base_type="ctrl" dimension="0"/>
+</oc>
+</interface>
+<body>
+<l>Features := []</l>
+<l>get_message_obj (Rect, MessageHandle, 'Rect')</l>
+<l>disp_obj (Rect, WindowHandle)</l>
+<l>reduce_domain (Image, Rect, ImageReduced1)</l>
+<l>threshold (ImageReduced1, Regions2, 135, 255)</l>
+<l>connection (Regions2, ConnectedRegions2)</l>
+<l>get_message_tuple (MessageHandle, 'Rectc1', Rectc1)</l>
+<l>get_message_tuple (MessageHandle, 'Rectc2', Rectc2)</l>
+<l>select_shape (ConnectedRegions2, Selected1, ['height','column'], 'and', [73.15,Rectc1], [1000,(Rectc1+Rectc2)/2])</l>
+<l>select_shape (ConnectedRegions2, Selected2, ['height','column'], 'and', [73.15,(Rectc1+Rectc2)/2], [1000,Rectc2])</l>
+<l>union1 (Selected1, Selected1)</l>
+<l>count_obj (Selected1, Number1)</l>
+<l>IsTrue := true</l>
+<l>if (Number1&gt;0 and IsTrue)</l>
+<l>    area_center (Selected1, Area1, Row1, Column1)</l>
+<c>    * </c>
+<l>    elliptic_axis (Selected1, Ra, Rb, Phi1)</l>
+<l>    disp_obj (Selected1, WindowHandle)</l>
+<l>    Features := [Features,Area1, Row1, Column1,Ra,Rb,Phi1]</l>
+<l>else</l>
+<l>    Features := [Features,0,0,0,0,0,0]</l>
+<l>    IsTrue := false</l>
+<l>endif</l>
+<l>union1 (Selected2, Selected2)</l>
+<l>count_obj (Selected2, Number2)</l>
+<l>if (Number2&gt;0 and IsTrue)</l>
+<l>    area_center (Selected2, Area2, Row2, Column2)</l>
+<l>    elliptic_axis (Selected1, Ra, Rb, Phi2)</l>
+<l>    disp_obj (Selected2, WindowHandle)</l>
+<l>    Features := [Features,Area2, Row2, Column2,Ra,Rb,Phi2]</l>
+<l>else</l>
+<l>    Features := [Features,0,0,0,0,0,0]</l>
+<l>    IsTrue := false</l>
+<l>endif</l>
+<l>if (IsTrue)</l>
+<l>    get_message_obj (Circle, MessageHandle, 'Circle')</l>
+<l>    disp_obj (Circle, WindowHandle)</l>
+<l>    erosion_circle (Circle, RegionErosion, 70)</l>
+<l>    difference (RegionErosion, Selected1, RegionDifference)</l>
+<l>    difference (RegionDifference, Selected2, RegionDifference)</l>
+<l>    reduce_domain (Image, RegionDifference, ImageReduced4)</l>
+<l>    tuple_gen_sequence (0, 255, 10, Sequence)</l>
+<l>    Sequence := [Sequence,255]</l>
+<l>    Feature := []</l>
+<l>    for Index := 0 to |Sequence|-2 by 1</l>
+<l>        threshold (ImageReduced4, Region, Sequence[Index], Sequence[Index+1])</l>
+<l>        area_center (Region, Area, Row, Column)</l>
+<l>        Feature := [Feature,Area, Row, Column]</l>
+<l>    endfor</l>
+<l>    Features := [Features,Feature]</l>
+<l>    tuple_deviation (Index, Deviation)</l>
+<l>    Features := [Features,Deviation]</l>
+<l>else</l>
+<l>    tuple_gen_const (78, 0, Newtuple)</l>
+<l>    Features := [Features,Newtuple,-100]</l>
+<l>endif</l>
+<l>set_message_tuple (MessageHandle, 'NumFeatures', Features)</l>
+<c>* </c>
+<c>* </c>
+<l>return ()</l>
+</body>
+<docu id="UpFaceCheck">
+<parameters>
+<parameter id="Features">
+<sem_type>real</sem_type>
+</parameter>
+<parameter id="Image"/>
+<parameter id="IsTrue"/>
+<parameter id="MessageHandle"/>
+<parameter id="WindowHandle"/>
+</parameters>
+</docu>
+</procedure>
+<procedure name="create_object_drawID">
+<interface>
+<ic>
+<par name="str" base_type="ctrl" dimension="0"/>
+</ic>
+<oc>
+<par name="DrawID" base_type="ctrl" dimension="0"/>
+</oc>
+</interface>
+<body>
+<c>* </c>
+<c>* ['circle', 'circle_arc', 'ellipse', 'ellipse_arc', 'line', 'rectangle1', 'rectangle2']</c>
+<l>tuple_split (str, '(', Substrings)</l>
+<l>tuple_split (Substrings, ')', Substrings)</l>
+<l>tuple_string (Substrings, '#', Substrings)</l>
+<l>DrawID := []</l>
+<l>if (|Substrings|==2)</l>
+<l>    tuple_split (Substrings[1], ',', Substrings1)</l>
+<l>    tuple_number (Substrings1, Number1)</l>
+<l>    if ((Substrings[0]=='Circle' or Substrings[0]=='circle') and  |Number1|&gt;=3)</l>
+<l>        create_drawing_object_circle (Number1[0], Number1[1], Number1[2], DrawID)</l>
+<l>    elseif ((Substrings[0]=='circle_arc') and  |Number1|&gt;=5)</l>
+<l>        create_drawing_object_circle_sector (Number1[0], Number1[1], Number1[2], Number1[3], Number1[4], DrawID)</l>
+<l>    elseif ((Substrings[0]=='Ellipse' or Substrings[0]=='ellipse') and  |Number1|&gt;=5)</l>
+<l>        create_drawing_object_ellipse (Number1[0], Number1[1], Number1[2], Number1[3], Number1[4], DrawID)</l>
+<l>    elseif ((Substrings[0]=='ellipse_arc') and  |Number1|&gt;=7)</l>
+<l>        create_drawing_object_ellipse_sector (Number1[0], Number1[1], Number1[2], Number1[3], Number1[4], Number1[5], Number1[6], DrawID)</l>
+<l>    elseif ((Substrings[0]=='Line' or Substrings[0]=='line') and  |Number1|&gt;=4)</l>
+<l>        create_drawing_object_line (Number1[0], Number1[1], Number1[2], Number1[3], DrawID)</l>
+<l>    elseif ((Substrings[0]=='rectangle1' or Substrings[0]=='rectangle1') and  |Number1|&gt;=4)</l>
+<l>        create_drawing_object_rectangle1 (Number1[0], Number1[1], Number1[2], Number1[3], DrawID)</l>
+<l>    elseif ((Substrings[0]=='rectangle2' or Substrings[0]=='rectangle2') and  |Number1|&gt;=5)</l>
+<l>        create_drawing_object_rectangle2 (Number1[0], Number1[1], Number1[2], Number1[3], Number1[4], DrawID)</l>
+<l>    endif</l>
+<l>endif</l>
+<l>return ()</l>
+</body>
+<docu id="create_object_drawID">
+<parameters>
+<parameter id="DrawID"/>
+<parameter id="str"/>
+</parameters>
+</docu>
+</procedure>
+<procedure name="get_message_tuple_romove">
+<interface>
+<ic>
+<par name="MessageHandle" base_type="ctrl" dimension="0"/>
+<par name="Key" base_type="ctrl" dimension="0"/>
+</ic>
+<oc>
+<par name="TupleData" base_type="ctrl" dimension="0"/>
+</oc>
+</interface>
+<body>
+<l>get_message_tuple (MessageHandle, Key, TupleData)</l>
+<l>set_message_param (MessageHandle, 'remove_key', Key, [])</l>
+<c>* </c>
+<l>return ()</l>
+</body>
+<docu id="get_message_tuple_romove">
+<parameters>
+<parameter id="Key"/>
+<parameter id="MessageHandle"/>
+<parameter id="TupleData"/>
+</parameters>
+</docu>
+</procedure>
+<procedure name="load_config_ValByType">
+<interface>
+<ic>
+<par name="FileName" base_type="ctrl" dimension="0"/>
+<par name="Section" base_type="ctrl" dimension="0"/>
+<par name="KeyName" base_type="ctrl" dimension="0"/>
+<par name="KeyType" base_type="ctrl" dimension="0"/>
+<par name="Defaultval" base_type="ctrl" dimension="0"/>
+</ic>
+<oc>
+<par name="OutData" base_type="ctrl" dimension="0"/>
+</oc>
+</interface>
+<body>
+<l>Set_DefaultVal_To_ini (FileName, Section, KeyName+'_数据类型', KeyType)</l>
+<l>load_config (FileName, Section, KeyName, Defaultval, OutData)</l>
+<l>return ()</l>
+</body>
+<docu id="load_config_ValByType">
+<parameters>
+<parameter id="Defaultval"/>
+<parameter id="FileName"/>
+<parameter id="KeyName"/>
+<parameter id="KeyType"/>
+<parameter id="OutData"/>
+<parameter id="Section"/>
+</parameters>
+</docu>
+</procedure>
+<procedure name="Set_DefaultVal_To_ini">
+<interface>
+<ic>
+<par name="FileName" base_type="ctrl" dimension="0"/>
+<par name="Section" base_type="ctrl" dimension="0"/>
+<par name="KeyName" base_type="ctrl" dimension="0"/>
+<par name="Defaultval" base_type="ctrl" dimension="0"/>
+</ic>
+</interface>
+<body>
+<l>DefaultvalOut := Defaultval</l>
+<l>val := ''</l>
+<l>file_exists (FileName, FileExists)</l>
+<l>if (FileExists==0)</l>
+<l>    parse_filename (FileName, BaseName, Extension, Directory)</l>
+<l>    tuple_split (Directory, '/', Substrings)</l>
+<l>    create_nodes (Substrings, Path)</l>
+<l>    ex_config_ini_create (FileName)</l>
+<l>else</l>
+<l>    ex_config_ini_read_str (FileName, Section, KeyName, '', val)</l>
+<l>endif</l>
+<l>if (val!=DefaultvalOut)</l>
+<l>    tuple_string (DefaultvalOut, '#', DefaultvalOut)</l>
+<l>    ex_config_ini_write_str (FileName, Section, KeyName, DefaultvalOut)</l>
+<l>endif</l>
+<c>* </c>
+<l>return ()</l>
+</body>
+<docu id="Set_DefaultVal_To_ini">
+<parameters>
+<parameter id="Defaultval"/>
+<parameter id="FileName"/>
+<parameter id="KeyName"/>
+<parameter id="Section"/>
+</parameters>
+</docu>
+</procedure>
+<procedure name="GetResult">
+<interface>
+<ic>
+<par name="Resultstrs" base_type="ctrl" dimension="0"/>
+</ic>
+<oc>
+<par name="ResultName" base_type="ctrl" dimension="0"/>
+<par name="Resultstrs2" base_type="ctrl" dimension="0"/>
+</oc>
+</interface>
+<body>
+<l>ResultName := 'OK'</l>
+<l>tuple_string (Resultstrs, '#', Resultstrs)</l>
+<l>tuple_regexp_replace (Resultstrs, ['ok|OK|Ok|oK|','ignore_case'], '', Resultstrs1)</l>
+<l>tuple_difference (Resultstrs1, '', Resultstrs2)</l>
+<l>if (|Resultstrs2|==0)</l>
+<l>    ResultName := 'OK'</l>
+<l>else</l>
+<l>    NumMatches := []</l>
+<l>    for Index := 0 to |Resultstrs2|-1 by 1</l>
+<l>        tuple_regexp_test (Resultstrs1, Resultstrs2[Index], NumMatche)</l>
+<l>        NumMatches := [NumMatches,NumMatche]</l>
+<l>    endfor</l>
+<l>    tuple_find_first (NumMatches, max(NumMatches), Index1)</l>
+<l>    ResultName := Resultstrs2[Index1]</l>
+<l>endif</l>
+<l>return ()</l>
+</body>
+<docu id="GetResult">
+<parameters>
+<parameter id="ResultName"/>
+<parameter id="Resultstrs"/>
+<parameter id="Resultstrs2"/>
+</parameters>
+</docu>
+</procedure>
+<procedure name="gen_region_byTypeAndStr">
+<interface>
+<oo>
+<par name="Region" base_type="iconic" dimension="0"/>
+</oo>
+<ic>
+<par name="Type" base_type="ctrl" dimension="0"/>
+<par name="str" base_type="ctrl" dimension="0"/>
+</ic>
+<oc>
+<par name="Vals" base_type="ctrl" dimension="0"/>
+</oc>
+</interface>
+<body>
+<l>gen_empty_region (Region)</l>
+<l>tuple_split (str, ',', Substrings)</l>
+<l>Vals := str</l>
+<l>if (Type=='circle' and  |Substrings|&gt;=3)</l>
+<l>    tuple_number (Substrings, Vals)</l>
+<l>    gen_circle (Region, Vals[0], Vals[1], Vals[2])</l>
+<l>elseif ((Type=='circle_arc') and  |Substrings|&gt;=5)</l>
+<l>    tuple_number (Substrings, Vals)</l>
+<l>    gen_circle_sector (Region, Vals[0], Vals[1], Vals[2], Vals[3], Vals[4])</l>
+<l>elseif (Type=='ellipse' and  |Substrings|&gt;=5)</l>
+<l>    tuple_number (Substrings, Vals)</l>
+<l>    gen_ellipse (Region, Vals[0], Vals[1], Vals[2], Vals[3], Vals[4])</l>
+<l>elseif (Type=='ellipse_arc' and  |Substrings|&gt;=7)</l>
+<l>    tuple_number (Substrings, Vals)</l>
+<l>    gen_ellipse_sector (Region, Vals[0], Vals[1], Vals[2], Vals[3], Vals[4], Vals[5], Vals[6])</l>
+<l>elseif (Type=='line' and  |Substrings|&gt;=4)</l>
+<l>    tuple_number (Substrings, Vals)</l>
+<l>    gen_region_line (Region, Vals[0], Vals[1], Vals[2], Vals[3])</l>
+<l>elseif (Type=='rectangle1' and  |Substrings|&gt;=4)</l>
+<l>    tuple_number (Substrings, Vals)</l>
+<c>    * </c>
+<l>    gen_rectangle1 (Region, Vals[0], Vals[1], Vals[2], Vals[3])</l>
+<l>elseif (Type=='rectangle2' and  |Substrings|&gt;=5)</l>
+<l>    tuple_number (Substrings, Vals)</l>
+<l>    gen_rectangle2 (Region, Vals[0], Vals[1], Vals[2], Vals[3], Vals[4])</l>
+<l>endif</l>
+<l>return ()</l>
+</body>
+<docu id="gen_region_byTypeAndStr">
+<parameters>
+<parameter id="Region"/>
+<parameter id="Type"/>
+<parameter id="Vals"/>
+<parameter id="str"/>
+</parameters>
+</docu>
+</procedure>
+<procedure name="get_param_by_drawID">
+<interface>
+<ic>
+<par name="DrawID" base_type="ctrl" dimension="0"/>
+</ic>
+<oc>
+<par name="ParamType" base_type="ctrl" dimension="0"/>
+<par name="Paramstr" base_type="ctrl" dimension="0"/>
+<par name="ParamNote" base_type="ctrl" dimension="0"/>
+<par name="ParamData" base_type="ctrl" dimension="0"/>
+</oc>
+</interface>
+<body>
+<l>Paramstr := ''</l>
+<l>ParamData := []</l>
+<l>ParamNote := []</l>
+<l>ParamVal := []</l>
+<l>try</l>
+<l>    get_drawing_object_params (DrawID, 'type', ParamType)</l>
+<l>    if (ParamType=='circle')</l>
+<l>        get_drawing_object_params (DrawID, 'row', Param0)</l>
+<l>        get_drawing_object_params (DrawID, 'column', Param1)</l>
+<l>        get_drawing_object_params (DrawID, 'radius', Param2)</l>
+<l>        ParamNote := ['row','column','radius']</l>
+<l>        ParamVal := [Param0, Param1, Param2]</l>
+<l>    elseif (ParamType=='circle_arc')</l>
+<l>        get_drawing_object_params (DrawID, 'row', Param0)</l>
+<l>        get_drawing_object_params (DrawID, 'column', Param1)</l>
+<l>        get_drawing_object_params (DrawID, 'radius', Param2)</l>
+<l>        get_drawing_object_params (DrawID, 'start_angle', Param3)</l>
+<l>        get_drawing_object_params (DrawID, 'end_angle', Param4)</l>
+<l>        ParamNote := ['row','column','radius','start_angle','end_angle']</l>
+<l>        ParamVal := [Param0, Param1, Param2,Param3, Param4]</l>
+<l>    elseif (ParamType=='ellipse')</l>
+<l>        get_drawing_object_params (DrawID, 'row', Param0)</l>
+<l>        get_drawing_object_params (DrawID, 'column', Param1)</l>
+<l>        get_drawing_object_params (DrawID, 'phi', Param2)</l>
+<l>        get_drawing_object_params (DrawID, 'radius1', Param3)</l>
+<l>        get_drawing_object_params (DrawID, 'radius2', Param4)</l>
+<l>        ParamNote := ['row','column','phi','radius1','radius2']</l>
+<l>        ParamVal := [Param0, Param1, Param2,Param3, Param4]</l>
+<l>    elseif (ParamType=='ellipse_arc')</l>
+<l>        get_drawing_object_params (DrawID, 'row', Param0)</l>
+<l>        get_drawing_object_params (DrawID, 'column', Param1)</l>
+<l>        get_drawing_object_params (DrawID, 'phi', Param2)</l>
+<l>        get_drawing_object_params (DrawID, 'radius1', Param3)</l>
+<l>        get_drawing_object_params (DrawID, 'radius2', Param4)</l>
+<l>        get_drawing_object_params (DrawID, 'start_angle', Param5)</l>
+<l>        get_drawing_object_params (DrawID, 'end_angle', Param6)</l>
+<l>        ParamNote := ['row','column','phi','radius1','radius2','start_angle','end_angle']</l>
+<l>        ParamVal := [Param0, Param1, Param2,Param3, Param4,Param5, Param6]</l>
+<l>    elseif (ParamType=='line')</l>
+<l>        get_drawing_object_params (DrawID, 'row1', Param0)</l>
+<l>        get_drawing_object_params (DrawID, 'column1', Param1)</l>
+<l>        get_drawing_object_params (DrawID, 'row2', Param2)</l>
+<l>        get_drawing_object_params (DrawID, 'column2', Param3)</l>
+<l>        ParamNote := ['row1','column1','row2','column2']</l>
+<l>        ParamVal := [Param0, Param1, Param2,Param3]</l>
+<l>    elseif (ParamType=='rectangle1')</l>
+<l>        get_drawing_object_params (DrawID, 'row1', Param0)</l>
+<l>        get_drawing_object_params (DrawID, 'column1', Param1)</l>
+<l>        get_drawing_object_params (DrawID, 'row2', Param2)</l>
+<l>        get_drawing_object_params (DrawID, 'column2', Param3)</l>
+<l>        ParamNote := ['row1','column1','row2','column2']</l>
+<l>        ParamVal := [Param0, Param1, Param2,Param3]</l>
+<l>    elseif (ParamType=='rectangle2')</l>
+<l>        get_drawing_object_params (DrawID, 'row', Param0)</l>
+<l>        get_drawing_object_params (DrawID, 'column', Param1)</l>
+<l>        get_drawing_object_params (DrawID, 'phi', Param2)</l>
+<l>        get_drawing_object_params (DrawID, 'length1', Param3)</l>
+<l>        get_drawing_object_params (DrawID, 'length2', Param4)</l>
+<l>        ParamNote := ['row','column','phi','length1','length2']</l>
+<l>        ParamVal := [Param0, Param1, Param2,Param3,Param4]</l>
+<l>    endif</l>
+<l>    if (|ParamVal|&gt;0)</l>
+<l>        Paramstr := ParamVal[0]</l>
+<l>        for Index1 := 1 to |ParamVal|-1 by 1</l>
+<l>            Paramstr := Paramstr+','+ParamVal[Index1]</l>
+<l>        endfor</l>
+<l>    endif</l>
+<l>    get_drawing_object_params (DrawID, 'color', Paramcolor)</l>
+<l>    ParamNote := ['type','color',ParamNote]</l>
+<l>    ParamData := [ParamType,Paramcolor,ParamVal]</l>
+<l>catch (Exception)</l>
+<l>endtry</l>
+<c>* </c>
+<l>return ()</l>
+</body>
+<docu id="get_param_by_drawID">
+<parameters>
+<parameter id="DrawID"/>
+<parameter id="ParamData"/>
+<parameter id="ParamNote"/>
+<parameter id="ParamType"/>
+<parameter id="Paramstr"/>
+</parameters>
+</docu>
+</procedure>
+<procedure name="TrainNewModel">
+<interface>
+<ic>
+<par name="MessageHandle" base_type="ctrl" dimension="0"/>
+<par name="WindowHandle" base_type="ctrl" dimension="0"/>
+<par name="ClassNames" base_type="ctrl" dimension="0"/>
+<par name="ImagePaths" base_type="ctrl" dimension="0"/>
+</ic>
+</interface>
+<body>
+<l>get_message_tuple (MessageHandle, 'CheckParam', CheckParam)</l>
+<l>if (CheckParam=='底面检测')</l>
+<c>    * </c>
+<l>    get_message_tuple (MessageHandle, 'CheckMode', CheckMode)</l>
+<l>    if ('SVM'==CheckMode)</l>
+<c>        * </c>
+<l>        get_message_tuple (MessageHandle, 'CheckFilePath', CheckFilePath)</l>
+<c>        * </c>
+<l>    endif</l>
+<l>    NumFeatures := 0</l>
+<l>    colors := ['forest green','red']</l>
+<l>    Nu := [0.05]</l>
+<l>    KernelParam := [0.02]</l>
+<l>    Featureeeee := {[]}</l>
+<l>    for ClassIndex := 0 to |ClassNames|-1 by 1</l>
+<c>        * </c>
+<l>        list_files (ImagePaths[ClassIndex], ['files','follow_links','recursive'], ImageFiles)</l>
+<l>        tuple_regexp_select (ImageFiles, ['\\.(tif|tiff|gif|bmp|jpg|jpeg|jp2|png|pcx|pgm|ppm|pbm|xwd|ima|hobj)$','ignore_case'], ImageFiles)</l>
+<l>        for Index3 := 0 to |ImageFiles|-1 by 1</l>
+<l>            read_image (Image, ImageFiles[Index3])</l>
+<l>            PreprocessImage (Image, Image, MessageHandle)</l>
+<l>            disp_message (WindowHandle, ImageFiles[Index3], 'window', 12, 12, 'black', 'true')</l>
+<l>            downCheck (Image, 1, WindowHandle, MessageHandle, MessageHandle, Error_info, Info)</l>
+<l>*             DreiFeatureExtract (Image, WindowHandle, Features)</l>
+<l>            Featureeeee.insert(Featureeeee.length()-1,Features)</l>
+<l>            if (NumFeatures=0)</l>
+<l>                NumFeatures := |Features|</l>
+<l>                create_class_svm (NumFeatures, 'rbf', KernelParam, Nu, |ClassNames|, 'one-versus-one', 'principal_components', 5, SVMHandle1)</l>
+<l>            elseif (NumFeatures #|Features|)</l>
+<l>                stop ()</l>
+<l>            endif</l>
+<l>            create_class_train_data (10, ClassTrainDataHandle1)</l>
+<l>            add_class_train_data_svm (SVMHandle1, Features)</l>
+<l>            get_class_train_data_svm (SVMHandle1, ClassTrainDataHandle)</l>
+<l>            tuple_real (Features, Features)</l>
+<l>            add_sample_class_svm (SVMHandle1, Features, ClassIndex)</l>
+<l>        endfor</l>
+<l>    endfor</l>
+<l>    train_class_svm (SVMHandle1, 0.001, 'default')</l>
+<l>    get_message_tuple (MessageHandle, 'CheckFilePath', CheckFilePath)</l>
+<l>    stop ()</l>
+<l>    write_class_svm (SVMHandle1, CheckFilePath)</l>
+<l>    clear_class_svm (SVMHandle1)</l>
+<l>endif</l>
+<l>if (CheckParam=='顶面检测')</l>
+<l>    get_message_tuple (MessageHandle, 'CheckMode', CheckMode)</l>
+<l>    if ('SVM'==CheckMode)</l>
+<c>        * </c>
+<l>        get_message_tuple (MessageHandle, 'CheckFilePath', CheckFilePath)</l>
+<c>        * </c>
+<l>    endif</l>
+<l>    NumFeatures := 0</l>
+<l>    colors := ['forest green','red']</l>
+<l>    Nu := [0.05]</l>
+<l>    KernelParam := [0.02]</l>
+<l>    Featureeeee := {[]}</l>
+<l>    for ClassIndex := 0 to |ClassNames|-1 by 1</l>
+<c>        * </c>
+<l>        list_files (ImagePaths[ClassIndex], ['files','follow_links','recursive'], ImageFiles)</l>
+<l>        tuple_regexp_select (ImageFiles, ['\\.(tif|tiff|gif|bmp|jpg|jpeg|jp2|png|pcx|pgm|ppm|pbm|xwd|ima|hobj)$','ignore_case'], ImageFiles)</l>
+<l>        for Index3 := 0 to |ImageFiles|-1 by 1</l>
+<l>            read_image (Image, ImageFiles[Index3])</l>
+<l>            PreprocessImage (Image, Image, MessageHandle)</l>
+<l>            disp_message (WindowHandle, ImageFiles[Index3], 'window', 12, 12, 'black', 'true')</l>
+<l>            Check_EinsFeatureExtract (Image, 1, MessageHandle, WindowHandle, MessageHandle, Error_info1, Info1)</l>
+<l>*             UpFaceCheck (Image, MessageHandle, WindowHandle, Features, IsTrue)</l>
+<l>            Featureeeee.insert(Featureeeee.length()-1,Features)</l>
+<l>            if (NumFeatures=0)</l>
+<l>                NumFeatures := |Features|</l>
+<l>                create_class_svm (NumFeatures, 'rbf', KernelParam, Nu, |ClassNames|, 'one-versus-one', 'principal_components', 5, SVMHandle1)</l>
+<l>            elseif (NumFeatures #|Features|)</l>
+<l>                stop ()</l>
+<l>            endif</l>
+<l>            tuple_real (Features, Features)</l>
+<l>            add_sample_class_svm (SVMHandle1, Features, ClassIndex)</l>
+<l>        endfor</l>
+<l>    endfor</l>
+<l>    train_class_svm (SVMHandle1, 0.001, 'default')</l>
+<l>    get_message_tuple (MessageHandle, 'CheckFilePath', CheckFilePath)</l>
+<l>    stop ()</l>
+<l>    write_class_svm (SVMHandle1, CheckFilePath)</l>
+<l>    clear_class_svm (SVMHandle1)</l>
+<l>endif</l>
+<l>return ()</l>
+</body>
+<docu id="TrainNewModel">
+<parameters>
+<parameter id="ClassNames"/>
+<parameter id="ImagePaths"/>
+<parameter id="MessageHandle"/>
+<parameter id="WindowHandle"/>
+</parameters>
+</docu>
+</procedure>
+<procedure name="HCheck">
+<interface>
+<io>
+<par name="Image" base_type="iconic" dimension="0"/>
+</io>
+<oo>
+<par name="PreprocessImage" base_type="iconic" dimension="0"/>
+</oo>
+<ic>
+<par name="IndexSN" base_type="ctrl" dimension="0"/>
+<par name="ShowHide" base_type="ctrl" dimension="0"/>
+<par name="WindowHandle" base_type="ctrl" dimension="0"/>
+<par name="MessageHandle" base_type="ctrl" dimension="0"/>
+</ic>
+<oc>
+<par name="ResultInfo" base_type="ctrl" dimension="0"/>
+<par name="WindowInfo" base_type="ctrl" dimension="0"/>
+<par name="FeatureVals" base_type="ctrl" dimension="2"/>
+</oc>
+</interface>
+<body>
+<c></c>
+<l>ResultInfo := ''</l>
+<l>WindowInfo := []</l>
+<l>FeatureVals:={}</l>
+<c></c>
+<l>tuple_string (IndexSN, '#', IndexSsN)</l>
+<l>set_message_tuple(MessageHandle,'IndexSsN', IndexSsN)</l>
+<l>lsClassResult[0] := 1</l>
+<l>get_message_tuple (MessageHandle, 'CheckParam', CheckParam)</l>
+<l>WindowInfo:=[WindowInfo,'检测方案:'+CheckParam]</l>
+<c>* 预处理图像</c>
+<l>tuple_split(CheckParam, '_', lsCheckParam)</l>
+<l>if(lsCheckParam[0]=='字符和瑕疵检测')</l>
+<l>    mirror_image (Image, ImageMirror, 'row')</l>
+<l>    rotate_image (ImageMirror, PreprocessImage, -90, 'constant')</l>
+<c></c>
+<l>else</l>
+<l>    copy_image (Image, PreprocessImage)</l>
+<l>endif</l>
+<l>get_image_size (PreprocessImage, Width, Height)</l>
+<l>set_part (WindowHandle, 0, 0, Height, Width)</l>
+<l>disp_image (PreprocessImage, WindowHandle)</l>
+<c></c>
+<c></c>
+<c></c>
+<l>outResultInfo:=''</l>
+<l>outWindowInfo:=[]</l>
+<l>outFeatureVals:={}</l>
+<l>if (lsCheckParam[0]=='不分类检测')</l>
+<l>    Check_Surface (PreprocessImage, ShowHide, WindowHandle, MessageHandle, outResultInfo, outWindowInfo, outFeatureVals)</l>
+<l>elseif (lsCheckParam[0]=='MLP分类检测')</l>
+<c>    * </c>
+<l>elseif (lsCheckParam[0]=='SVM分类检测')</l>
+<c></c>
+<l>elseif (lsCheckParam[0]=='地板检测')</l>
+<l>    Check_Floor (PreprocessImage, ShowHide, WindowHandle, MessageHandle, outResultInfo, outVectorInfos, outFeatureVals)</l>
+<l>elseif (lsCheckParam[0]=='底面检测')</l>
+<l>    Check_DownSur (PreprocessImage, ShowHide, WindowHandle, MessageHandle, outResultInfo, outWindowInfo, outFeatureVals)</l>
+<l>elseif (lsCheckParam[0]=='底凸检测')  </l>
+<l>    Check_Sur (PreprocessImage, ShowHide, WindowHandle, MessageHandle, outResultInfo, outWindowInfo, outFeatureVals)</l>
+<l>elseif(lsCheckParam[0]=='顶面检测')</l>
+<l>    Check_EinsFeatureExtract (PreprocessImage, ShowHide, WindowHandle, MessageHandle, outResultInfo, outWindowInfo, outFeatureVals)</l>
+<l>elseif (lsCheckParam[0]=='侧面尺寸测量')   </l>
+<l>    Check_Side (PreprocessImage, ShowHide, WindowHandle, MessageHandle, outResultInfo, outWindowInfo, outFeatureVals)</l>
+<l>elseif(lsCheckParam[0]=='字符和瑕疵检测')</l>
+<c></c>
+<l>    Check_OCR (PreprocessImage, ShowHide, WindowHandle, MessageHandle, outResultInfo, outWindowInfo, outFeatureVals)</l>
+<c>   </c>
+<c>    </c>
+<l>else</l>
+<l>    outResultInfo := 'OK'</l>
+<l>    outWindowInfo:='找不到检测模板'</l>
+<l>endif</l>
+<l>ResultInfo:=outResultInfo</l>
+<l>WindowInfo:=['检测:'+outResultInfo,outWindowInfo] </l>
+<l>FeatureVals:=outFeatureVals</l>
+<l>if(ShowHide)</l>
+<l>    if(ResultInfo=='OK')</l>
+<l>        disp_message(WindowHandle, WindowInfo, 'image', 10, 10, 'green', 'true')</l>
+<l>    else</l>
+<l>        disp_message(WindowHandle, WindowInfo, 'image', 10, 10, 'red', 'true')</l>
+<l>    endif</l>
+<l>endif</l>
+<c></c>
+<l>return ()</l>
+</body>
+<docu id="HCheck">
+<parameters>
+<parameter id="FeatureVals"/>
+<parameter id="Image"/>
+<parameter id="IndexSN"/>
+<parameter id="MessageHandle">
+<mixed_type>false</mixed_type>
+<sem_type>message</sem_type>
+<type_list>
+<item>integer</item>
+</type_list>
+</parameter>
+<parameter id="PreprocessImage"/>
+<parameter id="ResultInfo"/>
+<parameter id="ShowHide"/>
+<parameter id="WindowHandle"/>
+<parameter id="WindowInfo"/>
+</parameters>
+</docu>
+</procedure>
+<procedure name="Show_Hide">
+<interface>
+<io>
+<par name="obj" base_type="iconic" dimension="0"/>
+</io>
+<ic>
+<par name="ShowHide" base_type="ctrl" dimension="0"/>
+<par name="WindowHandle" base_type="ctrl" dimension="0"/>
+</ic>
+</interface>
+<body>
+<l>if (ShowHide)</l>
+<l>    disp_obj (obj, WindowHandle)</l>
+<l>endif</l>
+<l>return ()</l>
+</body>
+<docu id="Show_Hide">
+<parameters>
+<parameter id="ShowHide"/>
+<parameter id="WindowHandle"/>
+<parameter id="obj"/>
+</parameters>
+</docu>
+</procedure>
+<procedure name="TrainTestSvm">
+<interface>
+<ic>
+<par name="ShowHide" base_type="ctrl" dimension="0"/>
+<par name="WindowHandle" base_type="ctrl" dimension="0"/>
+<par name="MessageHandle" base_type="ctrl" dimension="0"/>
+<par name="OutMessageHandle" base_type="ctrl" dimension="0"/>
+</ic>
+</interface>
+<body>
+<l>ClassNames := ['OK', 'NG']</l>
+<l>get_message_tuple (MessageHandle, 'TrainImagePaths', ImageP)</l>
+<c>* </c>
+<l>get_message_tuple (MessageHandle, 'CheckMode', CheckMode)</l>
+<l>if (CheckMode=='SVM')</l>
+<l>    KernelTypes := ['linear', 'polynomial_homogeneous', 'polynomial_inhomogeneous', 'rbf']</l>
+<l>    KernelParams := [0.02, 0.01, 0.05, 0.1, 0.5]</l>
+<l>    Nus := [ 0.05,0.0001, 0.001, 0.01, 0.1, 0.2, 0.3]</l>
+<l>    NumClasses := [2, 3, 4, 5, 6, 7, 8, 9, 10]</l>
+<l>    Modes := ['novelty-detection', 'one-versus-all', 'one-versus-one']</l>
+<l>    Preprocessings := ['canonical_variates', 'none', 'normalization', 'principal_components']</l>
+<l>    NumComponents := [10,1, 2, 3, 4, 5, 8, 10, 15, 20, 30, 40, 50, 60, 70, 80, 90, 100]</l>
+<l>    KernelType := KernelTypes[0]</l>
+<l>    KernelParam := KernelParams[0]</l>
+<l>    Nu := Nus[0]</l>
+<l>    NumClass := NumClasses[0]</l>
+<l>    Mode := Modes[0]</l>
+<l>    Preprocessing := Preprocessings[0]</l>
+<l>    NumComponent := NumComponents[0]</l>
+<c>    * </c>
+<l>    TrainIndex := 0</l>
+<l>    vFeatures := {[]}</l>
+<c>    * 训练的文件路径</c>
+<l>    OKnum := 0</l>
+<l>    NGnum := 0</l>
+<l>    ImageFiles := []</l>
+<l>    for Index := 0 to |ImageP|-1 by 1</l>
+<l>        list_files (ImageP[Index], ['files','follow_links','recursive'], ImageFile)</l>
+<l>        ImageFiles := [ImageFiles,ImageFile]</l>
+<l>    endfor</l>
+<c>    * </c>
+<l>    tuple_regexp_select (ImageFiles, ['\\.(tif|tiff|gif|bmp|jpg|jpeg|jp2|png|pcx|pgm|ppm|pbm|xwd|ima|hobj)$','ignore_case'], ImageFiles)</l>
+<l>    tuple_regexp_select (ImageFiles, ['实时图像7'], ImageFiles)</l>
+<l>    SVMHandle := []</l>
+<l>    for Index1 := 0 to |ImageFiles|-1 by 1</l>
+<l>        ImageFile := ImageFiles[Index1]</l>
+<l>        read_image (Image, ImageFile)</l>
+<l>        try</l>
+<l>            PreprocessImage (Image, PreprocessImage, MessageHandle)</l>
+<l>            Show_Hide (PreprocessImage, ShowHide, WindowHandle)</l>
+<c>            * HCheck (PreprocessImage, ShowHide, Index1, WindowHandle, OutMessageHandle, MessageHandle)</c>
+<l>        catch (Exception)</l>
+<l>        endtry</l>
+<l>        get_message_tuple (MessageHandle, 'Feature', Real)</l>
+<l>        tuple_real (Real, Real)</l>
+<l>        if (|Real|&gt;0)</l>
+<l>            if (|SVMHandle|==0)</l>
+<l>                create_class_svm (|Real|, 'rbf', KernelParam, Nu, 2, 'one-versus-one', 'normalization', 10, SVMHandle)</l>
+<l>            endif</l>
+<l>            Feature := [ClassNames[0],ImageFile,Real]</l>
+<l>            vFeatures.insert(vFeatures.length(),Feature)</l>
+<l>            tuple_regexp_replace (ImageFile, ImageP, '', Result)</l>
+<l>            tuple_strstr (Result, 'OK', Position1)</l>
+<c>            * </c>
+<l>            if (Position1&gt;=0)</l>
+<l>*                 disp_message (WindowHandle, 'OK', 'image', 12, 12, 'black', 'true')</l>
+<l>                add_sample_class_svm (SVMHandle, Real, 0)</l>
+<l>                OKnum := OKnum+1</l>
+<c>                * </c>
+<l>            else</l>
+<l>*                 disp_message (WindowHandle, 'NG', 'window', 12, 12, 'black', 'true')</l>
+<l>                add_sample_class_svm (SVMHandle, Real, 1)</l>
+<l>                NGnum := NGnum+1</l>
+<l>            endif</l>
+<l>        endif</l>
+<c>        * </c>
+<l>*         stop ()</l>
+<l>    endfor</l>
+<l>    set_message_tuple (OutMessageHandle, 'OKnum', OKnum)</l>
+<l>    set_message_tuple (OutMessageHandle, 'NGnum', NGnum)</l>
+<l>    if (ShowHide)</l>
+<l>        disp_message (WindowHandle, 'NG:'+NGnum+'\r\n'+'OKnum'+OKnum, 'image', 0, 0, 'black', 'true')</l>
+<l>    endif</l>
+<l>    if (OKnum&gt;2 and NGnum&gt;2)</l>
+<c>        * 'add_sv_to_train_set', 'default'</c>
+<l>        get_message_tuple (MessageHandle, 'CheckFilePath', CheckFilePath)</l>
+<c>        * </c>
+<l>        train_class_svm (SVMHandle, 0.001, 'default')</l>
+<l>        file_exists (CheckFilePath, FileExists)</l>
+<l>        if (FileExists==1)</l>
+<l>            stop ()</l>
+<l>        endif</l>
+<l>        write_class_svm (SVMHandle, CheckFilePath)</l>
+<l>        clear_class_svm (SVMHandle)</l>
+<l>    endif</l>
+<l>endif</l>
+<c>* </c>
+<l>return ()</l>
+</body>
+<docu id="TrainTestSvm">
+<parameters>
+<parameter id="MessageHandle"/>
+<parameter id="OutMessageHandle"/>
+<parameter id="ShowHide"/>
+<parameter id="WindowHandle"/>
+</parameters>
+</docu>
+</procedure>
+<procedure name="SaveImage">
+<interface>
+<io>
+<par name="Image" base_type="iconic" dimension="0"/>
+</io>
+<ic>
+<par name="filename" base_type="ctrl" dimension="0"/>
+</ic>
+</interface>
+<body>
+<l>tuple_split (filename, '.', filenames)</l>
+<l>if (|filenames|==2)</l>
+<l>    write_image (Image, filenames[1], 0, filename)</l>
+<l>endif</l>
+<l>return ()</l>
+</body>
+<docu id="SaveImage">
+<parameters>
+<parameter id="Image"/>
+<parameter id="filename"/>
+</parameters>
+</docu>
+</procedure>
+<procedure name="downCheck">
+<interface>
+<io>
+<par name="Image" base_type="iconic" dimension="0"/>
+</io>
+<ic>
+<par name="ShowHide" base_type="ctrl" dimension="0"/>
+<par name="WindowHandle" base_type="ctrl" dimension="0"/>
+<par name="MessageHandle" base_type="ctrl" dimension="0"/>
+<par name="OutMessageHandle" base_type="ctrl" dimension="0"/>
+</ic>
+<oc>
+<par name="Error_info" base_type="ctrl" dimension="0"/>
+<par name="Info" base_type="ctrl" dimension="0"/>
+</oc>
+</interface>
+<body>
+<l>Error_info := ''</l>
+<l>Info := []</l>
+<l>get_message_obj (Circle, MessageHandle, 'Circle')</l>
+<l>set_message_tuple (OutMessageHandle, 'Feature', [])</l>
+<c>* </c>
+<l>reduce_domain (Image, Circle, ImageReduced)</l>
+<l>Show_Hide (Circle, ShowHide, WindowHandle)</l>
+<c>* </c>
+<c>* 获取中心区域</c>
+<l>threshold (ImageReduced, Region, 160, 255)</l>
+<l>fill_up (Region, RegionFillUp)</l>
+<l>connection (RegionFillUp, ConnectedRegions)</l>
+<l>area_center (ConnectedRegions, Area, Row1, Column1)</l>
+<l>select_shape (ConnectedRegions, SelectedRegions, 'area', 'and', max(Area)-1, max(Area)+1)</l>
+<l>reduce_domain (ImageReduced, SelectedRegions, ImageReduced1)</l>
+<l>count_obj (ImageReduced1, Number)</l>
+<l>if (Number&gt;0)</l>
+<c>    * Number判断是否获取到中心区域</c>
+<l>    circularity (SelectedRegions, Circularity)</l>
+<l>    intensity (SelectedRegions, ImageReduced1, Mean, Deviation)</l>
+<l>    area_center (SelectedRegions, Area2, Row4, Column4)</l>
+<l>    CentArea := Area2</l>
+<l>    CentCircularity := Circularity</l>
+<l>    CentGVMean := Mean</l>
+<l>    CentGVStd := Deviation</l>
+<c>    * 表面漏液检测</c>
+<l>    edges_sub_pix (ImageReduced1, Edges, 'canny', 11, 10, 30)</l>
+<l>    select_contours_xld (Edges, SelectedContours, 'contour_length', 400, 2500, -0.5, 0.5)</l>
+<l>    count_obj (SelectedContours, Number1)</l>
+<l>    if (Number1&gt;0)</l>
+<c>        * Number1用来判断是否正确分割到中心区域的凹槽</c>
+<l>        length_xld (SelectedContours, Length)</l>
+<l>        tuple_sum (Length, Sum)</l>
+<l>        CLSum := Sum</l>
+<l>    else</l>
+<l>        CLSum := 0</l>
+<l>    endif</l>
+<c>    * 获取胶管区域</c>
+<l>    threshold (ImageReduced, Region, 60, 130)</l>
+<l>    erosion_circle (Region, RegionErosion, 11)</l>
+<l>    fill_up (RegionErosion, RegionFillUp1)</l>
+<l>    smallest_circle (RegionFillUp1, Row2, Column2, Radius1)</l>
+<l>    if (Radius1&gt;0)</l>
+<c>        * Radius1用来判断是否分割到产品边界</c>
+<l>        gen_circle (Circle1, Row2, Column2, Radius1)</l>
+<l>        reduce_domain (ImageReduced, Circle1, ImageReduced2)</l>
+<l>        area_center (Circle1, Area1, Row3, Column3)</l>
+<l>        EArea := Area1-Area2</l>
+<l>    else</l>
+<l>        EArea := 0</l>
+<c>        * </c>
+<l>    endif</l>
+<c>    * </c>
+<c>    * </c>
+<l>else</l>
+<l>    CentArea := 0</l>
+<l>    CentCircularity := 0</l>
+<l>    CentGVMean := 0</l>
+<l>    CentGVStd := 1024</l>
+<l>    CLSum := 0</l>
+<l>    EArea := 0</l>
+<l>endif</l>
+<c>* </c>
+<l>Features := [CentArea,CentCircularity,CentGVMean,CentGVStd,CLSum,EArea]</l>
+<l>set_message_tuple (OutMessageHandle, 'Feature', Features)</l>
+<l>return ()</l>
+</body>
+<docu id="downCheck">
+<parameters>
+<parameter id="Error_info"/>
+<parameter id="Image"/>
+<parameter id="Info"/>
+<parameter id="MessageHandle"/>
+<parameter id="OutMessageHandle"/>
+<parameter id="ShowHide"/>
+<parameter id="WindowHandle"/>
+</parameters>
+</docu>
+</procedure>
+<procedure name="getallmessage">
+<interface>
+<ic>
+<par name="MessageHandle" base_type="ctrl" dimension="0"/>
+</ic>
+</interface>
+<body>
+<l>get_message_param (MessageHandle, 'message_keys', [], Allkeys)</l>
+<l>for Index := 0 to |Allkeys|-1 by 1</l>
+<l>    get_message_param (MessageHandle, 'key_data_type', Allkeys[Index], key_data_type)</l>
+<l>    if (key_data_type=='tuple')</l>
+<l>        get_message_tuple (MessageHandle, Allkeys[Index], val)</l>
+<l>    else</l>
+<l>        get_message_obj (ObjectData, MessageHandle, Allkeys[Index])</l>
+<c>        * </c>
+<l>    endif</l>
+<l>endfor</l>
+<l>return ()</l>
+</body>
+<docu id="getallmessage">
+<parameters>
+<parameter id="MessageHandle"/>
+</parameters>
+</docu>
+</procedure>
+<procedure name="Check_Surface">
+<interface>
+<io>
+<par name="Image" base_type="iconic" dimension="0"/>
+</io>
+<ic>
+<par name="ShowHide" base_type="ctrl" dimension="0"/>
+<par name="WindowHandle" base_type="ctrl" dimension="0"/>
+<par name="MessageHandle" base_type="ctrl" dimension="0"/>
+</ic>
+<oc>
+<par name="ResultInfo" base_type="ctrl" dimension="0"/>
+<par name="WindowInfo" base_type="ctrl" dimension="0"/>
+<par name="FeatureVals" base_type="ctrl" dimension="2"/>
+</oc>
+</interface>
+<body>
+<c>* </c>
+<c>* Features_retResults_nReginType检测区域类型</c>
+<c>* Features_retResults_strReginType检测类型字符串，返回值为“左面”或“右面”</c>
+<c>* Features_retResults_rectval错误区域外界矩形坐标</c>
+<c>* Features_retResults_ErrorType....................................错误类型</c>
+<c>* Features_retResults_strErrortype ....................................//错误类型字符串，返回值为“暗斑”，“干料”等缺陷中文名称</c>
+<c>* Features_retResults_ErrorContrast//缺陷对比度</c>
+<c>* Features_retResults_ErrorArea// 错误面积</c>
+<c>* Features_retResults_Diameter....................................错误面积</c>
+<c>* Features_retResults_Descript字符串描述</c>
+<c>* Features_retResults_nLevel....................................错误程度</c>
+<c>* Features_retResults_x....................................缺陷水平方向坐标</c>
+<c>* Features_retResults_y....................................缺陷垂直方向坐标</c>
+<c>* Features_retResults_fFeature</c>
+<c>* Features_retResults_ifTag....................................是否打标</c>
+<c>* Features_retResults_TagLength....................................打标持续行数</c>
+<c>* </c>
+<c>* Features_properDynThresh....................................</c>
+<c>* Features_regionWidthPix....................................</c>
+<c>* Features_regionHeightPix....................................  //缺陷本身的宽高</c>
+<c>* Features_errAreaPix;   //像素面积</c>
+<c>* Features_sImgLeft, //生成的小图区域</c>
+<c>* Features_sImgRight, //生成的小图区域</c>
+<c>* Features_sImgTop, //生成的小图区域</c>
+<c>* Features_sImgBotton;  //生成的小图区域</c>
+<c>* Features_ifInterWithEdge;   //是否跟边缘区域有交集</c>
+<c>* Features_ifNearEdge; //是否靠近边缘</c>
+<c>* Features_errHeight ....................................</c>
+<c>* Features_errWidth; ....................................分割的大块边缘区域宽高</c>
+<c>* Features_sImageHeight</c>
+<c>* Features_sImageWidth;   //小图区域宽高</c>
+<c>* Features_ifCrowded....................................是否密度过大</c>
+<c>* </c>
+<c>* </c>
+<c>* </c>
+<c>* </c>
+<c>* </c>
+<c>* SurfaceCheck()</c>
+<l>ResultInfo := ''</l>
+<l>WindowInfo := []</l>
+<l>FeatureVals := {}</l>
+<c></c>
+<l>global tuple G_AREA_MAX</l>
+<l>AREA_MAX:=int(G_AREA_MAX)</l>
+<c>* </c>
+<l>get_message_obj (CheckRegion, MessageHandle, 'hCheckRegion')</l>
+<l>reduce_domain (Image, CheckRegion, ImgReduced)</l>
+<l>area_center (CheckRegion, Area, ImageCenterRow, ImageCenterCol)</l>
+<c>* 将reduce后的图像进行阈值处理</c>
+<l>get_message_tuple (MessageHandle, 'Surf_ProdGray_Low', Surf_ProdGray_Low)</l>
+<l>get_message_tuple (MessageHandle, 'Surf_ProdGray_High', Surf_ProdGray_High)</l>
+<l>threshold (ImgReduced, ProductRegion, Surf_ProdGray_Low, Surf_ProdGray_High)</l>
+<c>* </c>
+<l>get_message_tuple (MessageHandle, 'Surf_CloseW', Surf_CloseW)</l>
+<l>get_message_tuple (MessageHandle, 'Surf_CloseH', Surf_CloseH)</l>
+<l>closing_rectangle1 (ProductRegion, ProductRegion, Surf_CloseW, Surf_CloseH)</l>
+<l>fill_up (ProductRegion, ProductRegion)</l>
+<c>* 将切边去掉</c>
+<l>get_message_tuple (MessageHandle, 'Surf_EroseW', Surf_EroseW)</l>
+<l>get_message_tuple (MessageHandle, 'Surf_EroseH', Surf_EroseH)</l>
+<l>erosion_rectangle1 (ProductRegion, ProductRegion, Surf_EroseW, Surf_EroseH)</l>
+<l>connection (ProductRegion, ProductRegion)</l>
+<l>get_message_tuple (MessageHandle, 'Surf_ProdArea', Surf_ProdArea)</l>
+<l>select_shape (ProductRegion, SelectedRegions, 'area', 'and', Surf_ProdArea, AREA_MAX)</l>
+<l>count_obj (SelectedRegions, ObjectAmount)</l>
+<l>if (ObjectAmount&gt;0)</l>
+<c>    * 有效图片，继续检测</c>
+<l>    ifContinue := true</l>
+<l>    if (ObjectAmount &gt; 1)</l>
+<l>        union1 (SelectedRegions, SelectedRegions)</l>
+<l>    endif</l>
+<l>    copy_obj (SelectedRegions, ProductRegion, 1, 1)</l>
+<c>    * 求产品reducce之后进行一些列处理后的图像的宽度</c>
+<l>    smallest_rectangle1 (ProductRegion, ProdR1, ProdC1, ProdR2, ProdC2)</l>
+<c>    * 重新定位要检测的区域</c>
+<l>    reduce_domain (Image, ProductRegion, ImgReduced)</l>
+<l>    ImageAsses_Width := ProdC2-ProdC1</l>
+<l>    ImageAsses_Height := ProdR2-ProdR1</l>
+<c></c>
+<c>    * </c>
+<c>    * 初始化剩余区域</c>
+<l>    copy_obj (ProductRegion, RegionReduced, 1, 1)</l>
+<c>    * </c>
+<c>    * ***模式选择</c>
+<l>    get_message_tuple (MessageHandle, 'str_DynMode1', str_DynMode1)</l>
+<l>    get_message_tuple (MessageHandle, 'str_DynMode2', str_DynMode2)</l>
+<l>    get_message_tuple (MessageHandle, 'str_DynMode3', str_DynMode3)</l>
+<l>    get_message_tuple (MessageHandle, 'str_DynMode4', str_DynMode4)</l>
+<c>    * </c>
+<l>    get_message_tuple (MessageHandle, 'Surf_MeanW1', Surf_MeanW1)</l>
+<l>    get_message_tuple (MessageHandle, 'Surf_MeanH1', Surf_MeanH1)</l>
+<l>    mean_image (ImgReduced, Mean1, Surf_MeanW1, Surf_MeanH1)</l>
+<l>    get_message_tuple (MessageHandle, 'Surf_MeanW2', Surf_MeanW2)</l>
+<l>    get_message_tuple (MessageHandle, 'Surf_MeanH2', Surf_MeanH2)</l>
+<l>    mean_image (ImgReduced, Mean2, Surf_MeanW2, Surf_MeanH2)</l>
+<c>    * </c>
+<l>    gen_empty_obj (AlreadySeg)</l>
+<l>    gen_empty_obj (DynThreshRegion)</l>
+<c>    * </c>
+<l>    get_message_tuple (MessageHandle, 'Surf_DynThresh1', Surf_DynThresh1)</l>
+<l>    dyn_threshold (Mean1, Mean2, DynThreshRegion1, Surf_DynThresh1, str_DynMode1)</l>
+<l>    fill_up (DynThreshRegion1, DynThreshRegion1)</l>
+<l>    area_center (DynThreshRegion1, tempThreshArea, NULL, NULL)</l>
+<l>    if (tempThreshArea&gt;0)</l>
+<l>        get_message_tuple (MessageHandle, 'Surf_CloseW1', Surf_CloseW1)</l>
+<l>        get_message_tuple (MessageHandle, 'Surf_CloseH1', Surf_CloseH1)</l>
+<l>        if (Surf_CloseW1&gt;0 and Surf_CloseH1&gt;0)</l>
+<l>            closing_rectangle1 (DynThreshRegion1, DynThreshRegion1, Surf_CloseW1, Surf_CloseH1)</l>
+<l>        endif</l>
+<l>        connection (DynThreshRegion1, DynThreshRegion1)</l>
+<l>        get_message_tuple (MessageHandle, 'Surf_DeepSizePixS', Surf_DeepSizePixS)</l>
+<l>        select_shape (DynThreshRegion1, DynThreshRegion1, 'area', 'and', Surf_DeepSizePixS, AREA_MAX)</l>
+<l>        RegionInput := DynThreshRegion1</l>
+<l>        GetRemainRegion (DynThreshRegion1, RegionReduced, AlreadySeg, ProductRegion, DynThreshRegion, DynThreshRegion1, AlreadySeg, RegionReduced, DynThreshRegion)</l>
+<c>        * </c>
+<l>    endif</l>
+<c>    * </c>
+<l>    get_message_tuple (MessageHandle, 'Surf_DynThresh2', Surf_DynThresh2)</l>
+<l>    dyn_threshold (Mean1, Mean2, DynThreshRegion2, Surf_DynThresh2, str_DynMode2)</l>
+<l>    fill_up (DynThreshRegion2, DynThreshRegion2)</l>
+<l>    area_center (DynThreshRegion2, tempThreshArea, NULL, NULL)</l>
+<l>    if (tempThreshArea&gt;0)</l>
+<l>        get_message_tuple (MessageHandle, 'Surf_CloseW2', Surf_CloseW2)</l>
+<l>        get_message_tuple (MessageHandle, 'Surf_CloseH2', Surf_CloseH2)</l>
+<l>        if (Surf_CloseW2&gt;0 and Surf_CloseH2&gt;0)</l>
+<l>            closing_rectangle1 (DynThreshRegion1, DynThreshRegion1, Surf_CloseW2, Surf_CloseH2)</l>
+<l>        endif</l>
+<l>        connection (DynThreshRegion2, DynThreshRegion2)</l>
+<l>        get_message_tuple (MessageHandle, 'Surf_ShallowSizePixS', Surf_ShallowSizePixS)</l>
+<l>        select_shape (DynThreshRegion2, DynThreshRegion2, 'area', 'and', Surf_ShallowSizePixS, AREA_MAX)</l>
+<l>        GetRemainRegion (DynThreshRegion2, RegionReduced, AlreadySeg, ProductRegion, DynThreshRegion, DynThreshRegion2, AlreadySeg, RegionReduced, DynThreshRegion)</l>
+<l>    endif</l>
+<c>    * </c>
+<l>    get_message_tuple (MessageHandle, 'Surf_DynThresh3', Surf_DynThresh3)</l>
+<l>    dyn_threshold (Mean1, Mean2, DynThreshRegion3, Surf_DynThresh3, str_DynMode3)</l>
+<l>    fill_up (DynThreshRegion3, DynThreshRegion3)</l>
+<l>    area_center (DynThreshRegion3, tempThreshArea, NULL, NULL)</l>
+<l>    if (tempThreshArea&gt;0)</l>
+<l>        get_message_tuple (MessageHandle, 'Surf_CloseW3', Surf_CloseW3)</l>
+<l>        get_message_tuple (MessageHandle, 'Surf_CloseH3', Surf_CloseH3)</l>
+<l>        if (Surf_CloseW3&gt;0 and Surf_CloseH3&gt;0)</l>
+<l>            closing_rectangle1 (DynThreshRegion3, DynThreshRegion3, Surf_CloseW3, Surf_CloseH3)</l>
+<l>        endif</l>
+<l>        connection (DynThreshRegion3, DynThreshRegion3)</l>
+<l>        get_message_tuple (MessageHandle, 'Surf_DeepSizePixS2', Surf_DeepSizePixS2)</l>
+<l>        select_shape (DynThreshRegion3, DynThreshRegion3, 'area', 'and', Surf_DeepSizePixS2, AREA_MAX)</l>
+<l>        GetRemainRegion (DynThreshRegion3, RegionReduced, AlreadySeg, ProductRegion, DynThreshRegion, DynThreshRegion3, AlreadySeg, RegionReduced, DynThreshRegion)</l>
+<l>    endif</l>
+<c>    * </c>
+<l>    get_message_tuple (MessageHandle, 'Surf_DynThresh4', Surf_DynThresh4)</l>
+<l>    dyn_threshold (Mean1, Mean2, DynThreshRegion4, Surf_DynThresh4, str_DynMode4)</l>
+<l>    fill_up (DynThreshRegion4, DynThreshRegion4)</l>
+<l>    area_center (DynThreshRegion4, tempThreshArea, NULL, NULL)</l>
+<l>    if (tempThreshArea&gt;0)</l>
+<l>        get_message_tuple (MessageHandle, 'Surf_CloseW4', Surf_CloseW4)</l>
+<l>        get_message_tuple (MessageHandle, 'Surf_CloseH4', Surf_CloseH4)</l>
+<l>        if (Surf_CloseW4&gt;0 and Surf_CloseH4&gt;0)</l>
+<l>            closing_rectangle1 (DynThreshRegion1, DynThreshRegion1, Surf_CloseW4, Surf_CloseH4)</l>
+<l>        endif</l>
+<l>        connection (DynThreshRegion4, DynThreshRegion4)</l>
+<l>        get_message_tuple (MessageHandle, 'Surf_ShallowSizePixS2', Surf_ShallowSizePixS2)</l>
+<l>        select_shape (DynThreshRegion4, DynThreshRegion4, 'area', 'and', Surf_ShallowSizePixS2, AREA_MAX)</l>
+<l>        GetRemainRegion (DynThreshRegion4, RegionReduced, AlreadySeg, ProductRegion, DynThreshRegion, DynThreshRegion4, AlreadySeg, RegionReduced, DynThreshRegion)</l>
+<l>    endif</l>
+<l>endif</l>
+<l>connection (DynThreshRegion, ProcessRegion)</l>
+<c>* </c>
+<c>* </c>
+<c>* /*将检测出的区域联合到一起*/</c>
+<l>union1 (DynThreshRegion1, DynThreshRegion1)</l>
+<l>union1 (DynThreshRegion2, DynThreshRegion2)</l>
+<l>union1 (DynThreshRegion3, DynThreshRegion3)</l>
+<l>union1 (DynThreshRegion4, DynThreshRegion4)</l>
+<l>area_center (DynThreshRegion, defectArea, NULL, NULL)</l>
+<l>if (defectArea&gt;0)</l>
+<l>    area_center (ProcessRegion, temphArea, NULL, NULL)</l>
+<l>    tuple_sort_index (temphArea, temphSortIndex)</l>
+<l>    tuple_inverse (temphSortIndex, temphSortIndex)</l>
+<l>    count_obj (ProcessRegion, DefectAmount)</l>
+<l>    get_message_tuple (MessageHandle, 'MaxReturnNum', MaxReturnNum)</l>
+<l>    FeatureVals := {}</l>
+<l>    for Index := 0 to min([DefectAmount,MaxReturnNum])-1 by 1</l>
+<c>        * //逐一选中区域进行分析</c>
+<l>        select_obj (ProcessRegion, ObjForAsses, temphSortIndex[Index]+1)</l>
+<l>        FeatureVal:={}</l>
+<l>        CalculateFeatures (ObjForAsses, Image, DynThreshRegion1, DynThreshRegion2, DynThreshRegion3, DynThreshRegion4, ProdR1, ProdR2, ProdC1, ProdC2, MessageHandle, FeatureVal)</l>
+<l>        FeatureVals.insert(Index,FeatureVal)</l>
+<l>    endfor</l>
+<l>endif</l>
+<l>if (ShowHide)</l>
+<l>    disp_obj (ProcessRegion, WindowHandle)</l>
+<l>endif</l>
+<c>* </c>
+<c>* </c>
+<l>return ()</l>
+</body>
+<docu id="Check_Surface">
+<parameters>
+<parameter id="FeatureVals"/>
+<parameter id="Image"/>
+<parameter id="MessageHandle">
+<mixed_type>false</mixed_type>
+<sem_type>message</sem_type>
+<type_list>
+<item>integer</item>
+</type_list>
+</parameter>
+<parameter id="ResultInfo"/>
+<parameter id="ShowHide"/>
+<parameter id="WindowHandle">
+<mixed_type>false</mixed_type>
+<sem_type>window</sem_type>
+<type_list>
+<item>integer</item>
+</type_list>
+</parameter>
+<parameter id="WindowInfo"/>
+</parameters>
+</docu>
+</procedure>
+<procedure name="CalculateFeatures">
+<interface>
+<io>
+<par name="InputRegion" base_type="iconic" dimension="0"/>
+<par name="Image" base_type="iconic" dimension="0"/>
+<par name="DynThreshRegion1" base_type="iconic" dimension="0"/>
+<par name="DynThreshRegion2" base_type="iconic" dimension="0"/>
+<par name="DynThreshRegion3" base_type="iconic" dimension="0"/>
+<par name="DynThreshRegion4" base_type="iconic" dimension="0"/>
+</io>
+<ic>
+<par name="ProdR1" base_type="ctrl" dimension="0"/>
+<par name="ProdR2" base_type="ctrl" dimension="0"/>
+<par name="ProdC1" base_type="ctrl" dimension="0"/>
+<par name="ProdC2" base_type="ctrl" dimension="0"/>
+<par name="MessageHandle" base_type="ctrl" dimension="0"/>
+</ic>
+<oc>
+<par name="FeatureVals" base_type="ctrl" dimension="1"/>
+</oc>
+</interface>
+<body>
+<l>FeatureVals := {[]}</l>
+<l>FeatureVals.clear()</l>
+<c></c>
+<c>* 'Features_ifCrowded'是否密度过大</c>
+<l>FeatureVals.insert(FeatureVals.length(),['Features_ifCrowded',false])</l>
+<l>Features_retResults_ifTag := 0</l>
+<l>Features_ifCrowded := false</l>
+<c>* //缺陷最小矩形</c>
+<l>smallest_rectangle1 (InputRegion, errR1, errC1, errR2, errC2)</l>
+<c>* //局部小区域,这里要根据先前检测出的实际产品四周坐标来决定，而不是整个图像的四周坐标</c>
+<l>if ((errR1-50)&lt;(ProdR1+5))</l>
+<l>    imgR1 := ProdR1+5</l>
+<l>else</l>
+<l>    imgR1 := errR1-50</l>
+<l>endif</l>
+<c>* </c>
+<l>if ((errR2+50)&gt;(ProdR2-5))</l>
+<l>    imgR2 := ProdR2-5</l>
+<l>else</l>
+<l>    imgR2 := errR2+50</l>
+<l>endif</l>
+<c>* </c>
+<l>if ((errC1-50)&lt;(ProdC1+5))</l>
+<l>    imgC1 := ProdC1+5</l>
+<l>else</l>
+<l>    imgC1 := errC1-50</l>
+<l>endif</l>
+<c>* </c>
+<l>if ((errC2+50)&gt;(ProdC2-5))</l>
+<l>    imgC2 := ProdC2-5</l>
+<l>else</l>
+<l>    imgC2 := errC2+50</l>
+<l>endif</l>
+<c>* //判断小图是否完全在产品区域之内</c>
+<l>gen_rectangle1 (imgRect, imgR1, imgC1, imgR2, imgC2)</l>
+<l>reduce_domain (Image, imgRect, imgSmall)</l>
+<c>* 区域是否包含在另一个区域中</c>
+<l>test_subset_region (InputRegion, DynThreshRegion1, subSet1)</l>
+<l>test_subset_region (InputRegion, DynThreshRegion2, subSet2)</l>
+<l>test_subset_region (InputRegion, DynThreshRegion3, subSet3)</l>
+<l>test_subset_region (InputRegion, DynThreshRegion4, subSet4)</l>
+<l>global tuple G_DEEP_REGION</l>
+<l>global tuple G_SHALLOW_REGION</l>
+<l>global tuple G_DEEP_REGION2</l>
+<l>global tuple G_SHALLOW_REGION2</l>
+<c></c>
+<l>DEEP_REGION:= G_DEEP_REGION</l>
+<l>SHALLOW_REGION:= G_SHALLOW_REGION</l>
+<l>DEEP_REGION2:= G_DEEP_REGION2</l>
+<l>SHALLOW_REGION2:= G_SHALLOW_REGION2</l>
+<c></c>
+<c></c>
+<l>if (subSet1 &gt; 0)</l>
+<l>    Features_properDynThresh := DEEP_REGION</l>
+<l>elseif (subSet2&gt;0)</l>
+<l>    Features_properDynThresh := SHALLOW_REGION</l>
+<l>elseif (subSet3&gt;0)</l>
+<l>    Features_properDynThresh := DEEP_REGION2</l>
+<l>elseif (subSet4&gt;0)</l>
+<l>    Features_properDynThresh := SHALLOW_REGION2</l>
+<l>endif</l>
+<l>FeatureVals.insert(FeatureVals.length(),['Features_properDynThresh',Features_properDynThresh])</l>
+<c>* </c>
+<l>copy_obj (InputRegion, regionDyn, 1, 1)</l>
+<l>area_center (regionDyn, regionArea, NULL, NULL)</l>
+<l>intensity (regionDyn, imgSmall, regionMean, regionDeviation)</l>
+<l>smallest_rectangle1 (regionDyn, errR1, errC1, errR2, errC2)</l>
+<l>Features_regionWidthPix := errC2 - errC1 + 1</l>
+<l>Features_regionHeightPix := errR2 - errR1 +1</l>
+<l>FeatureVals.insert(FeatureVals.length(),['Features_regionWidthPix',Features_regionWidthPix])</l>
+<l>FeatureVals.insert(FeatureVals.length(),['Features_regionHeightPix',Features_regionHeightPix])</l>
+<c>* //取较大值作为直径</c>
+<l>get_message_tuple (MessageHandle, 'Resolution_H', Resolution_H)</l>
+<l>get_message_tuple (MessageHandle, 'Resolution_W', Resolution_W)</l>
+<l>errDiam := max([(errR2-errR1)*Resolution_H,(errC2-errC1)*Resolution_W])</l>
+<c>* </c>
+<c></c>
+<c>* //缺陷面积及中心位置</c>
+<l>area_center (regionDyn, errArea, errCenterR, errCenterC)</l>
+<l>Features_errAreaPix := errArea</l>
+<l>Features_retResults_rectvals := [errC1,errR1,errC2,errR2]</l>
+<l>FeatureVals.insert(FeatureVals.length(),['Features_errAreaPix',Features_errAreaPix])</l>
+<l>FeatureVals.insert(FeatureVals.length(),['Features_retResults_rectvals',Features_retResults_rectvals])</l>
+<l>get_message_tuple (MessageHandle, 'Surf_Calib2', Surf_Calib2)</l>
+<l>get_message_tuple (MessageHandle, 'Surf_Calib', Surf_Calib)</l>
+<l>Features_retResults_ErrorArea := errArea*Resolution_W*Resolution_H*Surf_Calib2</l>
+<l>Features_retResults_Diameter := errDiam*Surf_Calib</l>
+<l>FeatureVals.insert(FeatureVals.length(),['Features_retResults_ErrorArea',Features_retResults_ErrorArea])</l>
+<l>FeatureVals.insert(FeatureVals.length(),['Features_retResults_Diameter',Features_retResults_Diameter])</l>
+<l>get_message_tuple (MessageHandle, 'Surf_Area_Min', Surf_Area_Min)</l>
+<l>if (Surf_Area_Min &gt; 0)</l>
+<l>    Features_retResults_nLevel := int(errArea/Surf_Area_Min)</l>
+<l>else</l>
+<l>    Features_retResults_nLevel := 0</l>
+<l>endif</l>
+<c>* 错误程度</c>
+<l>FeatureVals.insert(FeatureVals.length(),['Features_retResults_nLevel',Features_retResults_nLevel])</l>
+<c>* </c>
+<l>Features_retResults_x := int(errCenterC-ProdC1)</l>
+<l>Features_retResults_y := int(errCenterR)</l>
+<c>* </c>
+<l>FeatureVals.insert(FeatureVals.length(),['Features_retResults_x',Features_retResults_x])</l>
+<l>FeatureVals.insert(FeatureVals.length(),['Features_retResults_y',Features_retResults_y])</l>
+<c>* </c>
+<c>* //是否是亮线</c>
+<l>get_message_tuple (MessageHandle, 'Surf_iMinWidthGray', Surf_iMinWidthGray)</l>
+<l>get_message_tuple (MessageHandle, 'Surf_iMaxWidthGray', Surf_iMaxWidthGray)</l>
+<l>threshold (imgSmall, threshArea, Surf_iMinWidthGray, Surf_iMaxWidthGray)</l>
+<l>connection (threshArea, threshArea)</l>
+<l>smallest_rectangle1 (threshArea, threshR1, threshC1, threshR2, threshC2)</l>
+<l>Features_errHeight := threshR2-threshR1+1</l>
+<l>Features_errWidth := threshC2-threshC1+1</l>
+<l>FeatureVals.insert(FeatureVals.length(),['Features_errWidth',Features_errWidth])</l>
+<l>FeatureVals.insert(FeatureVals.length(),['Features_errHeight',Features_errHeight])</l>
+<c>* </c>
+<c>* </c>
+<c>* </c>
+<c>* </c>
+<c>* </c>
+<c>* </c>
+<l>get_message_tuple (MessageHandle, 'Surf_ShallowSizePixS2', Surf_ShallowSizePixS2)</l>
+<l>get_message_tuple (MessageHandle, 'Surf_iRecordWidthLine', Surf_iRecordWidthLine)</l>
+<l>get_message_tuple (MessageHandle, 'Surf_fHorAndVorRatio', Surf_fHorAndVorRatio)</l>
+<l>get_message_tuple (MessageHandle, 'Surf_DeepSizePixL2', Surf_DeepSizePixL2)</l>
+<l>get_message_tuple (MessageHandle, 'Surf_DeepSizePixM2', Surf_DeepSizePixM2)</l>
+<l>get_message_tuple (MessageHandle, 'Surf_DeepSizePixS2', Surf_DeepSizePixS2)</l>
+<l>get_message_tuple (MessageHandle, 'Surf_ShallowSizePixL2', Surf_ShallowSizePixL2)</l>
+<l>get_message_tuple (MessageHandle, 'Surf_ShallowSizePixM2', Surf_ShallowSizePixM2)</l>
+<l>get_message_tuple (MessageHandle, 'Surf_DeepSizePixL', Surf_DeepSizePixL)</l>
+<l>get_message_tuple (MessageHandle, 'Surf_DeepSizePixM', Surf_DeepSizePixM)</l>
+<l>get_message_tuple (MessageHandle, 'Surf_DeepSizePixS', Surf_DeepSizePixS)</l>
+<c>* </c>
+<l>retClass := 'DEFECT'</l>
+<l>if (DEEP_REGION == Features_properDynThresh)</l>
+<c>    * </c>
+<l>    if (Features_errAreaPix &gt;= Surf_DeepSizePixL)</l>
+<l>        retClass := 'DEEP_L'</l>
+<l>*         Features_retResults_ifTag := Surf_IfDeepLTag</l>
+<l>    elseif (Features_errAreaPix &gt;= Surf_DeepSizePixM)</l>
+<l>        retClass := 'DEEP_M'</l>
+<l>    elseif (Features_errAreaPix &gt;= Surf_DeepSizePixS)</l>
+<l>        retClass := 'DEEP_S'</l>
+<l>    endif</l>
+<l>elseif (DEEP_REGION2 == Features_properDynThresh)</l>
+<l>    if (Features_errAreaPix &gt;= Surf_DeepSizePixL2)</l>
+<l>        retClass := 'DEEP_L2'</l>
+<l>    elseif (Features_errAreaPix &gt;= Surf_DeepSizePixM2)</l>
+<l>        retClass := 'DEEP_M2'</l>
+<l>    elseif (Features_errAreaPix &gt;= Surf_DeepSizePixS2)</l>
+<l>        retClass := 'DEEP_S2'</l>
+<l>    endif</l>
+<l>elseif (SHALLOW_REGION2 == Features_properDynThresh)</l>
+<l>    if (Features_errAreaPix &gt;= Surf_ShallowSizePixL2)</l>
+<l>        retClass := 'SHALLOW_L2'</l>
+<l>    elseif (Features_errAreaPix &gt;= Surf_ShallowSizePixM2)</l>
+<l>        retClass := 'SHALLOW_M2'</l>
+<l>    elseif (Features_errAreaPix &gt;= Surf_ShallowSizePixS2)</l>
+<l>        retClass := 'SHALLOW_S2'</l>
+<l>    endif</l>
+<l>endif</l>
+<l>tuple_int (Surf_iRecordWidthLine, Surf_iRecordWidthLine)</l>
+<l>if (1.0*Features_errWidth/Features_errHeight &gt;= Surf_fHorAndVorRatio and Surf_iRecordWidthLine)</l>
+<l>    retClass := 'DEFECT'</l>
+<l>endif</l>
+<l>get_message_tuple (MessageHandle, 'LabelNames', LabelNames)</l>
+<l>tuple_find (LabelNames, retClass, LabelIndices)</l>
+<l>get_message_tuple (MessageHandle, 'AlarmNames', AlarmNames)</l>
+<l>tuple_find (LabelNames, retClass, AlarmIndices)</l>
+<l>if (LabelIndices[0]&gt;=0)</l>
+<l>    Features_retResults_ifTag := 1</l>
+<l>else</l>
+<l>    Features_retResults_ifTag := 0</l>
+<l>endif</l>
+<l>if (AlarmIndices[0]&gt;=0)</l>
+<l>    Features_retResults_Alarm := 1</l>
+<l>else</l>
+<l>    Features_retResults_Alarm := 0</l>
+<l>endif</l>
+<l>FeatureVals.insert(FeatureVals.length(),['Features_retResults_ifTag',Features_retResults_ifTag])</l>
+<l>FeatureVals.insert(FeatureVals.length(),['Features_retResults_Alarm',Features_retResults_Alarm])</l>
+<l>get_message_tuple (MessageHandle, retClass, retClass)</l>
+<l>Features_retResults_Errortype := retClass</l>
+<l>get_message_tuple (MessageHandle, 'DefectNames', DefectNames)</l>
+<l>get_message_tuple (MessageHandle, 'DefectVals', DefectVals)</l>
+<l>tuple_string (retClass, '#', retClass)</l>
+<l>tuple_find_first (DefectNames, retClass, firstIndex)</l>
+<l>if (|firstIndex|!=0)</l>
+<l>    if (firstIndex[0]&lt;0)</l>
+<l>        firstIndex[0] := 0</l>
+<l>    endif</l>
+<l>    Features_retResults_strErrortype := DefectVals[firstIndex[0]]</l>
+<l>    FeatureVals.insert(FeatureVals.length(),['Features_retResults_strErrortype',Features_retResults_strErrortype])</l>
+<l>    FeatureVals.insert(FeatureVals.length(),['Features_retResults_Errortype',Features_retResults_Errortype])</l>
+<l>    FeatureVals.insert(FeatureVals.length(),['Features_retResults_ifTag',Features_retResults_ifTag])</l>
+<l>endif</l>
+<c>* </c>
+<c>* </c>
+<c>* </c>
+<c>* </c>
+<l>return ()</l>
+</body>
+<docu id="CalculateFeatures">
+<parameters>
+<parameter id="DynThreshRegion1"/>
+<parameter id="DynThreshRegion2"/>
+<parameter id="DynThreshRegion3"/>
+<parameter id="DynThreshRegion4"/>
+<parameter id="FeatureVals"/>
+<parameter id="Image"/>
+<parameter id="InputRegion"/>
+<parameter id="MessageHandle"/>
+<parameter id="ProdC1"/>
+<parameter id="ProdC2"/>
+<parameter id="ProdR1"/>
+<parameter id="ProdR2"/>
+</parameters>
+</docu>
+</procedure>
+<procedure name="tuple_regexp_replace_all">
+<interface>
+<ic>
+<par name="Data" base_type="ctrl" dimension="0"/>
+<par name="Expression" base_type="ctrl" dimension="0"/>
+<par name="Replace" base_type="ctrl" dimension="0"/>
+</ic>
+<oc>
+<par name="DataOut" base_type="ctrl" dimension="0"/>
+</oc>
+</interface>
+<body>
+<l>DataOut := Data</l>
+<l>while (1)</l>
+<l>    tuple_regexp_replace (DataOut, Expression, Replace, DataOut)</l>
+<l>    tuple_strchr (DataOut, ' ', Position)</l>
+<l>    if (Position&lt;0)</l>
+<l>        break</l>
+<l>    endif</l>
+<l>endwhile</l>
+<l>return ()</l>
+</body>
+<docu id="tuple_regexp_replace_all">
+<parameters>
+<parameter id="Data"/>
+<parameter id="DataOut"/>
+<parameter id="Expression"/>
+<parameter id="Replace"/>
+</parameters>
+</docu>
+</procedure>
+<procedure name="load_config_keys_vals">
+<interface>
+<ic>
+<par name="IniFile" base_type="ctrl" dimension="0"/>
+<par name="SectionName" base_type="ctrl" dimension="0"/>
+</ic>
+<oc>
+<par name="KeyNames" base_type="ctrl" dimension="0"/>
+<par name="KeyVals" base_type="ctrl" dimension="0"/>
+</oc>
+</interface>
+<body>
+<l>ex_config_ini_read_key_names (IniFile, SectionName, AlarmFlagNameVals)</l>
+<l>tuple_string (AlarmFlagNameVals, '#', AlarmFlagNameVals)</l>
+<l>tuple_split (AlarmFlagNameVals, '=', AlarmFlagNameVals)</l>
+<l>tuple_gen_sequence (0, |AlarmFlagNameVals|-1, 2, Sequence)</l>
+<l>tuple_select (AlarmFlagNameVals, Sequence, KeyNames)</l>
+<l>tuple_gen_sequence (1, |AlarmFlagNameVals|-1, 2, Sequence)</l>
+<l>tuple_select (AlarmFlagNameVals, Sequence, KeyVals)</l>
+<c>* </c>
+<l>return ()</l>
+</body>
+<docu id="load_config_keys_vals">
+<parameters>
+<parameter id="IniFile"/>
+<parameter id="KeyNames"/>
+<parameter id="KeyVals"/>
+<parameter id="SectionName"/>
+</parameters>
+</docu>
+</procedure>
+<procedure name="SVM_SurFaceCheck">
+<interface>
+<io>
+<par name="PreprocessImage" base_type="iconic" dimension="0"/>
+</io>
+<ic>
+<par name="ShowHide" base_type="ctrl" dimension="0"/>
+<par name="WindowHandle" base_type="ctrl" dimension="0"/>
+<par name="MessageHandle" base_type="ctrl" dimension="0"/>
+<par name="ResultInfo" base_type="ctrl" dimension="0"/>
+<par name="VectorInfos" base_type="ctrl" dimension="1"/>
+</ic>
+<oc>
+<par name="outResultInfo" base_type="ctrl" dimension="0"/>
+<par name="outVectorInfos" base_type="ctrl" dimension="1"/>
+<par name="FeatureValss" base_type="ctrl" dimension="2"/>
+</oc>
+</interface>
+<body>
+<l>outResultInfo := ResultInfo</l>
+<l>outVectorInfos := VectorInfos</l>
+<l>outResultInfo := ''</l>
+<c>* </c>
+<c>* </c>
+<c>* </c>
+<l>return ()</l>
+</body>
+<docu id="SVM_SurFaceCheck">
+<parameters>
+<parameter id="FeatureValss"/>
+<parameter id="MessageHandle"/>
+<parameter id="PreprocessImage"/>
+<parameter id="ResultInfo"/>
+<parameter id="ShowHide"/>
+<parameter id="VectorInfos"/>
+<parameter id="WindowHandle"/>
+<parameter id="outResultInfo"/>
+<parameter id="outVectorInfos"/>
+</parameters>
+</docu>
+</procedure>
+<procedure name="MessageExit">
+<interface>
+<ic>
+<par name="MessageHandle" base_type="ctrl" dimension="0"/>
+<par name="MessageKey" base_type="ctrl" dimension="0"/>
+<par name="SetVal" base_type="ctrl" dimension="0"/>
+</ic>
+<oc>
+<par name="IsExit" base_type="ctrl" dimension="0"/>
+</oc>
+</interface>
+<body>
+<c></c>
+<l>get_message_param (MessageHandle, 'key_exists', MessageKey, IsExit)</l>
+<l>if (IsExit==1)</l>
+<l>    throw ('MessageHandle:key:'+MessageKey+'已经存在')</l>
+<l>endif</l>
+<l>set_message_tuple (MessageHandle, MessageKey, SetVal)</l>
+<l>return ()</l>
+</body>
+<docu id="MessageExit">
+<parameters>
+<parameter id="IsExit"/>
+<parameter id="MessageHandle"/>
+<parameter id="MessageKey"/>
+<parameter id="SetVal"/>
+</parameters>
+</docu>
+</procedure>
+<procedure name="loglog">
+<interface>
+<ic>
+<par name="MessageInHandle" base_type="ctrl" dimension="0"/>
+<par name="NewCreate" base_type="ctrl" dimension="0"/>
+<par name="logtxt" base_type="ctrl" dimension="0"/>
+</ic>
+</interface>
+<body>
+<l>try</l>
+<l>    logtxtOut := logtxt</l>
+<l>    tuple_string (logtxtOut, '#', logtxtOut)</l>
+<l>    logtxtOut := sum(logtxtOut)</l>
+<l>    get_system_time (MSecond, Second, Minute, Hour, Day, YDay, Month, Year)</l>
+<l>    if (NewCreate)</l>
+<l>        get_message_param (MessageInHandle, 'key_exists', 'logTime', GenParamValue)</l>
+<l>        if (GenParamValue==1)</l>
+<l>            get_message_tuple (MessageInHandle, 'logFileHandle', logFileHandle)</l>
+<l>            close_file (logFileHandle)</l>
+<l>        endif</l>
+<l>        set_message_tuple (MessageInHandle, 'logTime', [Year,Month,Day,Hour])</l>
+<l>        tuple_string ([Year,Month,Day,Hour,Minute,Second,MSecond], '#', String)</l>
+<l>        get_message_tuple (MessageInHandle, 'TestName', TestName)</l>
+<l>        logPathName := 'CheckLog/'+TestName+'/'+sum(String)+'.cvs'</l>
+<l>        file_exists (logPathName, FileExists)</l>
+<l>        if (FileExists==0)</l>
+<l>            parse_filename (logPathName, BaseName, Extension, Directory)</l>
+<l>            tuple_split (Directory, '/', Substrings)</l>
+<l>            create_nodes (Substrings, Path)</l>
+<l>        endif</l>
+<l>        open_file (logPathName, 'output', logFileHandle)</l>
+<l>        set_message_tuple (MessageInHandle, 'logFileHandle', logFileHandle)</l>
+<l>        fwrite_string (logFileHandle, logtxtOut)</l>
+<l>        fnew_line (logFileHandle)</l>
+<l>    else</l>
+<l>        get_message_param (MessageInHandle, 'key_exists', 'logTime', GenParamValue)</l>
+<c>        * </c>
+<l>        if (GenParamValue==0)</l>
+<l>            set_message_tuple (MessageInHandle, 'logTime', [Year,Month,Day,Hour])</l>
+<l>            tuple_string ([Year,Month,Day,Hour,Minute,Second,MSecond], '#', String)</l>
+<c>            * </c>
+<l>            get_message_tuple (MessageInHandle, 'TestName', TestName)</l>
+<l>            logPathName := 'CheckLog/'+TestName+'/'+sum(String)+'.cvs'</l>
+<l>            file_exists (logPathName, FileExists)</l>
+<l>            if (FileExists==0)</l>
+<l>                parse_filename (logPathName, BaseName, Extension, Directory)</l>
+<l>                tuple_split (Directory, '/', Substrings)</l>
+<l>                create_nodes (Substrings, Path)</l>
+<l>            endif</l>
+<l>            open_file (logPathName, 'output', logFileHandle)</l>
+<l>            set_message_tuple (MessageInHandle, 'logFileHandle', logFileHandle)</l>
+<l>            fwrite_string (logFileHandle, logtxtOut)</l>
+<l>            fnew_line (logFileHandle)</l>
+<l>        else</l>
+<l>            get_message_tuple (MessageInHandle, 'logTime', systime)</l>
+<l>            tuple_string (systime, '#', String1)</l>
+<l>            tuple_string ([Year,Month,Day,Hour,Minute,Second,MSecond], '#', String)</l>
+<l>            if (String1[0:3]!=String[0:3])</l>
+<l>                get_message_tuple (MessageInHandle, 'logFileHandle', logFileHandle)</l>
+<l>                close_file (logFileHandle)</l>
+<l>                get_message_tuple (MessageInHandle, 'TestName', TestName)</l>
+<l>                logPathName := 'CheckLog/'+TestName+'/'+sum(String)+'.cvs'</l>
+<l>                file_exists (logPathName, FileExists)</l>
+<l>                if (FileExists==0)</l>
+<c>                    * </c>
+<l>                    parse_filename (logPathName, BaseName, Extension, Directory)</l>
+<l>                    tuple_split (Directory, '/', Substrings)</l>
+<l>                    create_nodes (Substrings, Path)</l>
+<l>                endif</l>
+<l>                set_message_tuple (MessageInHandle, 'logTime', [Year,Month,Day,Hour])</l>
+<l>                open_file (logPathName, 'output', logFileHandle)</l>
+<l>                set_message_tuple (MessageInHandle, 'logFileHandle', logFileHandle)</l>
+<l>                fwrite_string (logFileHandle, logtxtOut)</l>
+<l>                fnew_line (logFileHandle)</l>
+<l>            else</l>
+<l>                get_message_tuple (MessageInHandle, 'logFileHandle', logFileHandle)</l>
+<l>                fwrite_string (logFileHandle, logtxtOut)</l>
+<l>                fnew_line (logFileHandle)</l>
+<l>            endif</l>
+<l>        endif</l>
+<l>    endif</l>
+<c>    * </c>
+<l>catch (Exception)</l>
+<l>endtry</l>
+<c>* </c>
+<l>return ()</l>
+</body>
+<docu id="loglog">
+<parameters>
+<parameter id="MessageInHandle"/>
+<parameter id="NewCreate"/>
+<parameter id="logtxt"/>
+</parameters>
+</docu>
+</procedure>
+<procedure name="GetRemainRegion">
+<interface>
+<io>
+<par name="RegionInput" base_type="iconic" dimension="0"/>
+<par name="RegionReduced" base_type="iconic" dimension="0"/>
+<par name="AlreadySeg" base_type="iconic" dimension="0"/>
+<par name="ProductRegion" base_type="iconic" dimension="0"/>
+<par name="DynThreshRegion" base_type="iconic" dimension="0"/>
+</io>
+<oo>
+<par name="RegionInputOut" base_type="iconic" dimension="0"/>
+<par name="AlreadySegOut" base_type="iconic" dimension="0"/>
+<par name="RegionReducedOut" base_type="iconic" dimension="0"/>
+<par name="DynThreshRegionOut" base_type="iconic" dimension="0"/>
+</oo>
+</interface>
+<body>
+<l>AlreadySegOut := AlreadySeg</l>
+<l>DynThreshRegionOut := DynThreshRegion</l>
+<l>RegionInputOut := RegionInput</l>
+<l>RegionReducedOut := RegionReduced</l>
+<l>union1 (RegionInputOut, RegionInputOut)</l>
+<l>area_center (RegionInputOut, inputArea, NULL, NULL)</l>
+<l>if (inputArea&gt;0)</l>
+<l>    intersection (RegionReducedOut, RegionInputOut, RegionInputOut)</l>
+<l>    area_center (RegionInputOut, tempInputArea, NULL, NULL)</l>
+<l>    if (tempInputArea&gt;0)</l>
+<l>        dilation_rectangle1 (RegionInputOut, TempDilationRegion, 50, 50)</l>
+<l>        area_center (AlreadySegOut, tempAlreadySegArea, NULL, NULL)</l>
+<l>        if (tempAlreadySegArea&gt;0)</l>
+<l>            concat_obj (TempDilationRegion, AlreadySegOut, AlreadySegOut)</l>
+<l>            union1 (AlreadySegOut, AlreadySegOut)</l>
+<l>        else</l>
+<l>            copy_obj (TempDilationRegion, AlreadySegOut, 1, 1)</l>
+<l>        endif</l>
+<l>        area_center (AlreadySegOut, tempAlreadySegArea, NULL, NULL)</l>
+<c>        * //4. 更新剩余区域</c>
+<l>        complement (AlreadySegOut, RegionLeft)</l>
+<l>        area_center (RegionLeft, tempRegionLeftArea, NULL, NULL)</l>
+<l>        if (tempRegionLeftArea&gt;0)</l>
+<l>            intersection (ProductRegion, RegionLeft, RegionReducedOut)</l>
+<l>        endif</l>
+<l>        area_center (DynThreshRegionOut, tempDynThreshRegionArea, NULL, NULL)</l>
+<l>        if (tempDynThreshRegionArea&gt;0)</l>
+<l>            concat_obj (RegionInputOut, DynThreshRegionOut, DynThreshRegionOut)</l>
+<l>        else</l>
+<l>            copy_obj (RegionInputOut, DynThreshRegionOut, 1, 1)</l>
+<l>        endif</l>
+<l>    endif</l>
+<c>    * </c>
+<l>endif</l>
+<l>connection (RegionInputOut, RegionInputOut)</l>
+<l>return ()</l>
+</body>
+<docu id="GetRemainRegion">
+<parameters>
+<parameter id="AlreadySeg"/>
+<parameter id="AlreadySegOut"/>
+<parameter id="DynThreshRegion"/>
+<parameter id="DynThreshRegionOut"/>
+<parameter id="ProductRegion"/>
+<parameter id="RegionInput"/>
+<parameter id="RegionInputOut"/>
+<parameter id="RegionReduced"/>
+<parameter id="RegionReducedOut"/>
+</parameters>
+</docu>
+</procedure>
+<procedure name="InitSurCheck">
+<interface>
+<ic>
+<par name="MessageHandle" base_type="ctrl" dimension="0"/>
+</ic>
+</interface>
+<body>
+<c>* </c>
+<c></c>
+<c>* </c>
+<c>* 表面缺陷类型  OTHER还是0</c>
+<c>* </c>
+<c>* </c>
+<l>get_message_tuple (MessageHandle, 'TestName', TestName)</l>
+<l>get_message_tuple (MessageHandle, 'CameraIndex', CameraIndex)</l>
+<l>get_message_tuple (MessageHandle, 'ImageW', ImageW)</l>
+<l>get_message_tuple (MessageHandle, 'ImageH', ImageH)</l>
+<c>* </c>
+<l>get_current_dir (DirName)</l>
+<l>set_message_tuple (MessageHandle, 'DirName', DirName)</l>
+<l>get_message_tuple (MessageHandle, 'CheckParam', CheckParam)</l>
+<l>get_message_tuple (MessageHandle, 'CurrentSchemePath', CurrentSchemePath)</l>
+<l>get_message_tuple (MessageHandle, 'CurrentScheme', CurrentScheme)</l>
+<l>get_message_tuple (MessageHandle, 'SystemPath', SystemPath)</l>
+<c>* </c>
+<c>* </c>
+<c>* </c>
+<c></c>
+<l>load_config_set_message_Number (MessageHandle, CurrentScheme, '边缘检测', '边缘面积', 'EdgeArea', 50, val)</l>
+<c>* </c>
+<c>* [缺陷类型]</c>
+<c>* </c>
+<l>load_config_set_message_Number (MessageHandle, CurrentScheme, '缺陷类型', '默认', 'DEFECT', 10, Default_DEFECT)</l>
+<l>load_config_set_message_Number (MessageHandle, CurrentScheme, '缺陷类型', 'DEEP_S', 'DEEP_S', 11, DEEP_S)</l>
+<l>load_config_set_message_Number (MessageHandle, CurrentScheme, '缺陷类型', 'DEEP_M', 'DEEP_M', 12, DEEP_M)</l>
+<l>load_config_set_message_Number (MessageHandle, CurrentScheme, '缺陷类型', 'DEEP_L', 'DEEP_L', 13, DEEP_L)</l>
+<l>load_config_set_message_Number (MessageHandle, CurrentScheme, '缺陷类型', 'SHALLOW_S', 'SHALLOW_S', 14, SHALLOW_S)</l>
+<l>load_config_set_message_Number (MessageHandle, CurrentScheme, '缺陷类型', 'SHALLOW_M', 'SHALLOW_M', 15, SHALLOW_M)</l>
+<l>load_config_set_message_Number (MessageHandle, CurrentScheme, '缺陷类型', 'SHALLOW_L', 'SHALLOW_L', 16, SHALLOW_L)</l>
+<l>load_config_set_message_Number (MessageHandle, CurrentScheme, '缺陷类型', 'OVER_CROWDED', 'OVER_CROWDED', 17, OVER_CROWDED)</l>
+<l>load_config_set_message_Number (MessageHandle, CurrentScheme, '缺陷类型', 'DEEP_S2', 'DEEP_S2', 18, DEEP_S2)</l>
+<l>load_config_set_message_Number (MessageHandle, CurrentScheme, '缺陷类型', 'DEEP_M2', 'DEEP_M2', 19, DEEP_M2)</l>
+<l>load_config_set_message_Number (MessageHandle, CurrentScheme, '缺陷类型', 'DEEP_L2', 'DEEP_L2', 20, DEEP_L2)</l>
+<l>load_config_set_message_Number (MessageHandle, CurrentScheme, '缺陷类型', 'SHALLOW_S2', 'SHALLOW_S2', 21, SHALLOW_S2)</l>
+<l>load_config_set_message_Number (MessageHandle, CurrentScheme, '缺陷类型', 'SHALLOW_M2', 'SHALLOW_M2', 22, SHALLOW_M2)</l>
+<l>load_config_set_message_Number (MessageHandle, CurrentScheme, '缺陷类型', 'SHALLOW_L2', 'SHALLOW_L2', 23, SHALLOW_L2)</l>
+<c>* </c>
+<c>* [打标报警]</c>
+<l>load_config (CurrentScheme, '缺陷类型_打标报警', '打标', 'DEEP_S|DEEP_M|DEEP_L|', LabelNames)</l>
+<l>load_config (CurrentScheme, '缺陷类型_打标报警', '报警', 'DEEP_S|DEEP_M|DEEP_L|', AlarmNames)</l>
+<l>tuple_regexp_replace_all (LabelNames, ' ', '', LabelNames)</l>
+<l>tuple_split (LabelNames, '|', LabelNames)</l>
+<l>tuple_regexp_replace_all (AlarmNames, ' ', '', AlarmNames)</l>
+<l>tuple_split (AlarmNames, '|', AlarmNames)</l>
+<l>set_message_tuple (MessageHandle, 'AlarmNames', AlarmNames)</l>
+<l>set_message_tuple (MessageHandle, 'LabelNames', LabelNames)</l>
+<c>* </c>
+<c>* </c>
+<c>* [测宽]</c>
+<l>load_config_set_message_Number (MessageHandle, CurrentScheme, '测宽', '测宽灰度', 'WidthGray', 0, val)</l>
+<c>* //</c>
+<c>* [背景分离]</c>
+<l>load_config_set_message_Number (MessageHandle, CurrentScheme, '背景分离', '产品灰度&gt;', 'Surf_ProdGray_Low', 1, val)</l>
+<l>load_config_set_message_Number (MessageHandle, CurrentScheme, '背景分离', '产品灰度&lt;', 'Surf_ProdGray_High', 255, val)</l>
+<l>load_config_set_message_Number (MessageHandle, CurrentScheme, '背景分离', '产品面积&gt;', 'Surf_ProdArea', 2000, val)</l>
+<c>* [缺陷识别]</c>
+<l>load_config_set_message_Number (MessageHandle, CurrentScheme, '缺陷识别', 'MeanW1', 'Surf_MeanW1', 3, val)</l>
+<l>load_config_set_message_Number (MessageHandle, CurrentScheme, '缺陷识别', 'MeanH1', 'Surf_MeanH1', 3, val)</l>
+<l>load_config_set_message_Number (MessageHandle, CurrentScheme, '缺陷识别', 'MeanW2', 'Surf_MeanW2', 30, val)</l>
+<l>load_config_set_message_Number (MessageHandle, CurrentScheme, '缺陷识别', 'MeanH2', 'Surf_MeanH2', 30, val)</l>
+<l>load_config_set_message_Number (MessageHandle, CurrentScheme, '缺陷识别', 'CloseW', 'Surf_CloseW', 10, val)</l>
+<l>load_config_set_message_Number (MessageHandle, CurrentScheme, '缺陷识别', 'CloseH', 'Surf_CloseH', 1, val)</l>
+<l>load_config_set_message_Number (MessageHandle, CurrentScheme, '缺陷识别', 'EroseW', 'Surf_EroseW', 7, val)</l>
+<l>load_config_set_message_Number (MessageHandle, CurrentScheme, '缺陷识别', 'EroseH', 'Surf_EroseH', 1, val)</l>
+<c>* </c>
+<l>load_config_set_message_Number (MessageHandle, CurrentScheme, '缺陷识别', 'DynThresh1', 'Surf_DynThresh1', 7, val)</l>
+<l>switch (val)</l>
+<l>case 0:</l>
+<l>    str_DynMode1 := 'light'</l>
+<l>    break</l>
+<l>case 1:</l>
+<l>    str_DynMode1 := 'dark'</l>
+<l>    break</l>
+<l>case 2:</l>
+<l>    str_DynMode1 := 'not_equal'</l>
+<l>    break</l>
+<l>default:</l>
+<l>    str_DynMode1 := 'not_equal'</l>
+<l>    break</l>
+<l>endswitch</l>
+<l>set_message_tuple (MessageHandle, 'str_DynMode1', str_DynMode1)</l>
+<l>load_config_set_message_Number (MessageHandle, CurrentScheme, '缺陷识别', 'CloseW2', 'Surf_CloseW1', 20, val)</l>
+<l>load_config_set_message_Number (MessageHandle, CurrentScheme, '缺陷识别', 'CloseH2', 'Surf_CloseH1', 30, val)</l>
+<c>* </c>
+<l>load_config_set_message_Number (MessageHandle, CurrentScheme, '缺陷识别', 'DynThresh2', 'Surf_DynThresh2', 20, val)</l>
+<l>load_config_set_message_Number (MessageHandle, CurrentScheme, '缺陷识别', 'DynMode2', 'Surf_DynMode2', 30, val)</l>
+<l>switch (val)</l>
+<l>case 0:</l>
+<l>    str_DynMode2 := 'light'</l>
+<l>    break</l>
+<l>case 1:</l>
+<l>    str_DynMode2 := 'dark'</l>
+<l>    break</l>
+<l>case 2:</l>
+<l>    str_DynMode2 := 'not_equal'</l>
+<l>    break</l>
+<l>default:</l>
+<l>    str_DynMode2 := 'not_equal'</l>
+<l>    break</l>
+<l>endswitch</l>
+<l>set_message_tuple (MessageHandle, 'str_DynMode2', str_DynMode2)</l>
+<c>* </c>
+<l>load_config_set_message_Number (MessageHandle, CurrentScheme, '缺陷识别', 'CloseW2', 'Surf_CloseW2', 20, val)</l>
+<l>load_config_set_message_Number (MessageHandle, CurrentScheme, '缺陷识别', 'CloseH2', 'Surf_CloseH2', 30, val)</l>
+<c>* </c>
+<l>load_config_set_message_Number (MessageHandle, CurrentScheme, '缺陷识别', 'DynThresh3', 'Surf_DynThresh3', 20, val)</l>
+<l>load_config_set_message_Number (MessageHandle, CurrentScheme, '缺陷识别', 'DynMode3', 'Surf_DynMode3', 30, val)</l>
+<l>switch (val)</l>
+<l>case 0:</l>
+<l>    str_DynMode := 'light'</l>
+<l>    break</l>
+<l>case 1:</l>
+<l>    str_DynMode := 'dark'</l>
+<l>    break</l>
+<l>case 2:</l>
+<l>    str_DynMode := 'not_equal'</l>
+<l>    break</l>
+<l>default:</l>
+<l>    str_DynMode := 'not_equal'</l>
+<l>    break</l>
+<l>endswitch</l>
+<l>set_message_tuple (MessageHandle, 'str_DynMode3', str_DynMode)</l>
+<l>load_config_set_message_Number (MessageHandle, CurrentScheme, '缺陷识别', 'CloseW3', 'Surf_CloseW3', 20, val)</l>
+<l>load_config_set_message_Number (MessageHandle, CurrentScheme, '缺陷识别', 'CloseH3', 'Surf_CloseH3', 30, val)</l>
+<c>* </c>
+<l>load_config_set_message_Number (MessageHandle, CurrentScheme, '缺陷识别', 'DynThresh4', 'Surf_DynThresh4', 20, val)</l>
+<l>load_config_set_message_Number (MessageHandle, CurrentScheme, '缺陷识别', 'DynMode4', 'Surf_DynMode4', 30, val)</l>
+<l>switch (val)</l>
+<l>case 0:</l>
+<l>    str_DynMode := 'light'</l>
+<l>    break</l>
+<l>case 1:</l>
+<l>    str_DynMode := 'dark'</l>
+<l>    break</l>
+<l>case 2:</l>
+<l>    str_DynMode := 'not_equal'</l>
+<l>    break</l>
+<l>default:</l>
+<l>    str_DynMode := 'not_equal'</l>
+<l>    break</l>
+<l>endswitch</l>
+<l>set_message_tuple (MessageHandle, 'str_DynMode4', str_DynMode)</l>
+<l>load_config_set_message_Number (MessageHandle, CurrentScheme, '缺陷识别', 'CloseW4', 'Surf_CloseW4', 20, val)</l>
+<l>load_config_set_message_Number (MessageHandle, CurrentScheme, '缺陷识别', 'CloseH4', 'Surf_CloseH4', 30, val)</l>
+<c>* </c>
+<l>load_config_set_message_Number (MessageHandle, CurrentScheme, '缺陷识别', 'Close_WC5', 'Surf_Close_WC5', 0, val)</l>
+<l>load_config_set_message_Number (MessageHandle, CurrentScheme, '缺陷识别', 'Close_HC5', 'Surf_Close_HC5', 0, val)</l>
+<l>load_config_set_message_Number (MessageHandle, CurrentScheme, '缺陷识别', 'Stripe_W1', 'Surf_Stripe_W1', 0, val)</l>
+<l>load_config_set_message_Number (MessageHandle, CurrentScheme, '缺陷识别', 'Stripe_W2', 'Surf_Stripe_W2', 0, val)</l>
+<c>* </c>
+<l>load_config_set_message_Number (MessageHandle, CurrentScheme, '缺陷识别', 'Stripe_H1', 'Surf_Stripe_H1', 0, val)</l>
+<l>load_config_set_message_Number (MessageHandle, CurrentScheme, '缺陷识别', 'Stripe_H2', 'Surf_Stripe_H2', 0, val)</l>
+<c>* </c>
+<c>* </c>
+<c>* //[缺陷尺寸]</c>
+<l>load_config_set_message_Number (MessageHandle, CurrentScheme, '缺陷尺寸', '最小面积', 'Surf_Area_Min', 1, val)</l>
+<l>load_config_set_message_Number (MessageHandle, CurrentScheme, '缺陷尺寸', '深缺陷阈值', 'Surf_Thresh_Deep', 21, val)</l>
+<l>load_config_set_message_Number (MessageHandle, CurrentScheme, '缺陷尺寸', '深小像素', 'Surf_DeepSizePixS', 1, val)</l>
+<l>load_config_set_message_Number (MessageHandle, CurrentScheme, '缺陷尺寸', '深中像素', 'Surf_DeepSizePixM', 55, val)</l>
+<l>load_config_set_message_Number (MessageHandle, CurrentScheme, '缺陷尺寸', '深大像素', 'Surf_DeepSizePixL', 65, val)</l>
+<c>* </c>
+<l>load_config_set_message_Number (MessageHandle, CurrentScheme, '缺陷尺寸', '浅缺陷阈值', 'Surf_Thresh_Shallow', 22, val)</l>
+<l>load_config_set_message_Number (MessageHandle, CurrentScheme, '缺陷尺寸', '浅小像素', 'Surf_ShallowSizePixS', 1, val)</l>
+<l>load_config_set_message_Number (MessageHandle, CurrentScheme, '缺陷尺寸', '浅中像素', 'Surf_ShallowSizePixM', 60, val)</l>
+<l>load_config_set_message_Number (MessageHandle, CurrentScheme, '缺陷尺寸', '浅大像素', 'Surf_ShallowSizePixL', 100, val)</l>
+<c>* </c>
+<l>load_config_set_message_Number (MessageHandle, CurrentScheme, '缺陷尺寸', '深缺陷阈值2', 'Surf_Thresh_Deep2', 21, val)</l>
+<l>load_config_set_message_Number (MessageHandle, CurrentScheme, '缺陷尺寸', '深小像素2', 'Surf_DeepSizePixS2', 1, val)</l>
+<l>load_config_set_message_Number (MessageHandle, CurrentScheme, '缺陷尺寸', '深中像素2', 'Surf_DeepSizePixM2', 55, val)</l>
+<l>load_config_set_message_Number (MessageHandle, CurrentScheme, '缺陷尺寸', '深大像素2', 'Surf_DeepSizePixL2', 65, val)</l>
+<c>* </c>
+<l>load_config_set_message_Number (MessageHandle, CurrentScheme, '缺陷尺寸', '浅缺陷阈值2', 'Surf_Thresh_Shallow2', 22, val)</l>
+<l>load_config_set_message_Number (MessageHandle, CurrentScheme, '缺陷尺寸', '浅小像素2', 'Surf_ShallowSizePixS2', 1, val)</l>
+<l>load_config_set_message_Number (MessageHandle, CurrentScheme, '缺陷尺寸', '浅中像素2', 'Surf_ShallowSizePixM2', 60, val)</l>
+<l>load_config_set_message_Number (MessageHandle, CurrentScheme, '缺陷尺寸', '浅大像素2', 'Surf_ShallowSizePixL2', 100, val)</l>
+<c>* </c>
+<c>* //[缺陷评分]</c>
+<l>load_config_set_message_Number (MessageHandle, CurrentScheme, '缺陷评分', '深小评分', 'Surf_DeepScoreS', 1, val)</l>
+<l>load_config_set_message_Number (MessageHandle, CurrentScheme, '缺陷评分', '深中评分', 'Surf_DeepScoreM', 2, val)</l>
+<l>load_config_set_message_Number (MessageHandle, CurrentScheme, '缺陷评分', '深大评分', 'Surf_DeepScoreL', 3, val)</l>
+<l>load_config_set_message_Number (MessageHandle, CurrentScheme, '缺陷评分', '浅小评分', 'Surf_ShallowScoreS', 1, val)</l>
+<l>load_config_set_message_Number (MessageHandle, CurrentScheme, '缺陷评分', '浅中评分', 'Surf_ShallowScoreM', 2, val)</l>
+<l>load_config_set_message_Number (MessageHandle, CurrentScheme, '缺陷评分', '浅大评分', 'Surf_ShallowScoreL', 3, val)</l>
+<c>* </c>
+<l>load_config_set_message_Number (MessageHandle, CurrentScheme, '缺陷评分', '深小评分2', 'Surf_DeepScoreS2', 1, val)</l>
+<l>load_config_set_message_Number (MessageHandle, CurrentScheme, '缺陷评分', '深中评分2', 'Surf_DeepScoreM2', 2, val)</l>
+<l>load_config_set_message_Number (MessageHandle, CurrentScheme, '缺陷评分', '深大评分2', 'Surf_DeepScoreL2', 3, val)</l>
+<l>load_config_set_message_Number (MessageHandle, CurrentScheme, '缺陷评分', '浅小评分2', 'Surf_ShallowScoreS2', 1, val)</l>
+<l>load_config_set_message_Number (MessageHandle, CurrentScheme, '缺陷评分', '浅中评分2', 'Surf_ShallowScoreM2', 2, val)</l>
+<l>load_config_set_message_Number (MessageHandle, CurrentScheme, '缺陷评分', '浅大评分2', 'Surf_ShallowScoreL2', 3, val)</l>
+<c>* </c>
+<l>load_config_set_message_Number (MessageHandle, CurrentScheme, '缺陷评分', '竖向暗纹评分', 'Surf_VertLineScore', 0, val)</l>
+<l>load_config_set_message_Number (MessageHandle, CurrentScheme, '缺陷评分', '横向暗纹评分', 'Surf_HorLineScore', 0, val)</l>
+<l>load_config_set_message_Number (MessageHandle, CurrentScheme, '缺陷评分', '缺陷总分', 'Surf_TotalScore', 1, val)</l>
+<c>* </c>
+<c>* </c>
+<c>* </c>
+<c>* </c>
+<c>* //[校准]</c>
+<l>load_config_set_message_Number (MessageHandle, CurrentScheme, '校准', '直径校准', 'Surf_Calib', 1.0, val)</l>
+<l>load_config_set_message_Number (MessageHandle, CurrentScheme, '校准', '面积校准', 'Surf_Calib2', 1.0, val)</l>
+<c>* </c>
+<c>* //[亮线干扰]</c>
+<l>load_config_set_message_Number (MessageHandle, CurrentScheme, '亮线干扰', '亮线横纵比', 'Surf_fHorAndVorRatio', 1.0, val)</l>
+<l>load_config_set_message_Number (MessageHandle, CurrentScheme, '亮线干扰', '亮线去除', 'Surf_iRecordWidthLine', 1.0, val)</l>
+<l>load_config_set_message_Number (MessageHandle, CurrentScheme, '亮线干扰', '亮线低灰度值', 'Surf_iMinWidthGray', 1.0, val)</l>
+<l>load_config_set_message_Number (MessageHandle, CurrentScheme, '亮线干扰', '亮线高灰度值', 'Surf_iMaxWidthGray', 1.0, val)</l>
+<c>* </c>
+<c>* </c>
+<l>load_config_set_message_Number (MessageHandle, CurrentScheme, '边界', '左边界', 'ImgLeftOffset', 0, ImgLeftOffset)</l>
+<l>load_config_set_message_Number (MessageHandle, CurrentScheme, '边界', '右边界'+CameraIndex, 'ImgRightOffset', 3746, ImgRightOffset)</l>
+<l>gen_rectangle1 (hCheckRegion, 0, ImgLeftOffset, ImageH, ImgRightOffset)</l>
+<l>set_message_obj (hCheckRegion, MessageHandle, 'hCheckRegion')</l>
+<c>* </c>
+<c>* </c>
+<c>* </c>
+<c>* </c>
+<c>* </c>
+<l>return ()</l>
+</body>
+<docu id="InitSurCheck">
+<parameters>
+<parameter id="MessageHandle"/>
+</parameters>
+</docu>
+</procedure>
+<procedure name="Init_FloorCheck">
+<interface>
+<ic>
+<par name="CurrentScheme" base_type="ctrl" dimension="0"/>
+<par name="CheckParam" base_type="ctrl" dimension="0"/>
+<par name="MessageHandle" base_type="ctrl" dimension="0"/>
+</ic>
+</interface>
+<body>
+<c></c>
+<c></c>
+<c></c>
+<c></c>
+<l>return ()</l>
+</body>
+<docu id="Init_FloorCheck">
+<parameters>
+<parameter id="CheckParam"/>
+<parameter id="CurrentScheme"/>
+<parameter id="MessageHandle"/>
+</parameters>
+</docu>
+</procedure>
+<procedure name="IniMapFile">
+<interface>
+<ic>
+<par name="FileNames" base_type="ctrl" dimension="0"/>
+<par name="Filesizes" base_type="ctrl" dimension="0"/>
+</ic>
+<oc>
+<par name="Filehandles" base_type="ctrl" dimension="0"/>
+</oc>
+</interface>
+<body>
+<l>global tuple g_filemappingMax</l>
+<l>filemappingMax:=g_filemappingMax</l>
+<c>* </c>
+<l>Filehandles := []</l>
+<c>* </c>
+<l>if (|FileNames|==|Filesizes|)</l>
+<l>    tuple_string (FileNames, '#', FileNames)</l>
+<l>    tuple_string (Filesizes, '#', Filesizes)</l>
+<l>    tuple_number (Filesizes, Filesizes)</l>
+<l>    for Index := 0 to |FileNames|-1 by 1</l>
+<l>        ex_openfilemapping (0, 0, FileNames[Index], Filesizes[Index], Filehandle)</l>
+<c>        * </c>
+<l>        if (Filehandle&gt;filemappingMax or Filehandle&lt;0)</l>
+<l>            ex_createfilemapping (0, 4, 0, Filesizes[Index], FileNames[Index], Filehandle)</l>
+<l>        endif</l>
+<l>        if (int(Filehandle)-int(filemappingMax)&gt;0)</l>
+<l>            throw ('createfilemapping,error')</l>
+<l>        endif</l>
+<l>         if(int(Filehandle)&lt;0)</l>
+<l>            throw ('createfilemapping,error')</l>
+<l>        endif</l>
+<l>        Filehandles := [Filehandles,Filehandle]</l>
+<l>    endfor</l>
+<l>endif</l>
+<c>* </c>
+<l>return ()</l>
+</body>
+<docu id="IniMapFile">
+<parameters>
+<parameter id="FileNames">
+<multivalue>optional</multivalue>
+<sem_type>any</sem_type>
+</parameter>
+<parameter id="Filehandles"/>
+<parameter id="Filesizes">
+<description lang="zh_CN">最小空间为sizeof(char)=1</description>
+<multivalue>optional</multivalue>
+<sem_type>any</sem_type>
+</parameter>
+</parameters>
+</docu>
+</procedure>
+<procedure name="Init_Python_Memory">
+<interface>
+<ic>
+<par name="TestPlanIni" base_type="ctrl" dimension="0"/>
+<par name="CheckParam" base_type="ctrl" dimension="0"/>
+<par name="MessageHandle" base_type="ctrl" dimension="0"/>
+</ic>
+</interface>
+<body>
+<c>*是否使用python共享内存方式检测</c>
+<l>load_config_set_message_Str (MessageHandle, TestPlanIni, CheckParam, 'Py检测超时Result', 'PyCheckTimeOutResult', 'NG', PyCheckTimeOutResult)</l>
+<l>load_config_set_message_Str (MessageHandle, TestPlanIni, CheckParam, 'Py检测报错Result', 'PyCheckErrorResult', 'NG', PyCheckTimeOutResult)</l>
+<l>load_config_set_message_Str (MessageHandle, TestPlanIni, CheckParam, 'Py默认Result', 'PyDefaultResult', 'OK', PyDefaultResult)</l>
+<l>load_config_set_message_Number (MessageHandle, TestPlanIni, CheckParam, 'Py内存区号', 'PyFileIndex', 1, PyFileIndex)</l>
+<c></c>
+<l>load_config_set_message_Number (MessageHandle, TestPlanIni, CheckParam, 'Py_结果开启', 'Py_ResultUse', 1, Py_ResultUse)</l>
+<c></c>
+<l>load_config_set_message_Number (MessageHandle, TestPlanIni, CheckParam, 'Py检测开启', 'UsePythonCheck', 1, UsePythonCheck)</l>
+<l>if (UsePythonCheck!=1)</l>
+<l>    return ()</l>
+<l>endif</l>
+<c></c>
+<c></c>
+<c>*图像信息 [宽，高...]</c>
+<l>load_config (TestPlanIni, CheckParam, 'FileName_ImageInfo', 7*4, FileName_ImageInfo)</l>
+<l>IniMapFile ('ImageInfo'+PyFileIndex, FileName_ImageInfo, FileName_ImageInfo_handle)</l>
+<l>set_message_tuple (MessageHandle, 'FileName_ImageInfo_handle', FileName_ImageInfo_handle)</l>
+<c>* </c>
+<c>* 上一次的结果计数</c>
+<l>load_config (TestPlanIni, CheckParam, 'FileName_ImageResultN', 1*4, FileName_ImageResultN)</l>
+<l>IniMapFile ('SimvisionImageResultN'+PyFileIndex, FileName_ImageResultN, FileName_ImageResultN_handle)</l>
+<l>set_message_tuple (MessageHandle, 'FileName_ImageResultN_handle', FileName_ImageResultN_handle)</l>
+<c>* </c>
+<c>* * 返回结果(以单通道图像byte形式返回,灰度为0的区域表示合格区,&gt;0的灰度值为缺陷,灰度的值表示缺陷类型)</c>
+<l>load_config (TestPlanIni, CheckParam, 'FileName_ImageResult(w*h)', 4096*4096, FileName_ImageResult)</l>
+<l>IniMapFile ('SimvisionImageResult'+PyFileIndex, FileName_ImageResult, FileName_ImageResult_handle)</l>
+<l>set_message_tuple (MessageHandle, 'FileName_ImageResult_handle', FileName_ImageResult_handle)</l>
+<c></c>
+<c>* 触发python检测计数区</c>
+<l>load_config (TestPlanIni, CheckParam, 'FileName_ImageTrigger', 1*4, FileName_ImageTrigger)</l>
+<l>IniMapFile ('SimvisionImageTrigger'+PyFileIndex, FileName_ImageTrigger, FileName_ImageTrigger_handle)</l>
+<l>set_message_tuple (MessageHandle, 'FileName_ImageTrigger_handle', FileName_ImageTrigger_handle)</l>
+<c>* 图像存储区(发送给python的图像)</c>
+<l>load_config (TestPlanIni, CheckParam, 'FileName_Image(w*h)', 4096*4096, FileName_Image)</l>
+<l>IniMapFile ('SimvisionImage'+PyFileIndex, FileName_Image, FileName_Image_handle)</l>
+<l>set_message_tuple (MessageHandle, 'FileName_Image_handle', FileName_Image_handle)</l>
+<c></c>
+<c>* python返回图像信息存储[height,width]</c>
+<l>load_config (TestPlanIni, CheckParam, 'FileName_ResultInfo(w*h)', 4096*4096, FileName_ResultInfo)</l>
+<l>IniMapFile ('ResultInfo'+PyFileIndex, FileName_ResultInfo, FileName_ResultInfo_handle)</l>
+<l>set_message_tuple (MessageHandle, 'FileName_ResultInfo_handle', FileName_ResultInfo_handle)</l>
+<c></c>
+<c>* </c>
+<c>* 检测超时时间</c>
+<l>load_config_number (TestPlanIni, CheckParam, 'AI检测超时(ms)', 500, AICheckTime)</l>
+<l>set_message_tuple (MessageHandle, 'AICheckTime', AICheckTime)</l>
+<c></c>
+<c></c>
+<l>load_config_set_message_Str (MessageHandle, TestPlanIni, CheckParam, 'Py图像默认类型名称', 'PyImageDefaultTypeName', 'OK', PyImageDefaultTypeName)</l>
+<l>load_config_set_message_Str (MessageHandle, TestPlanIni, CheckParam, 'Py图像灰度类型名称', 'PyImageGaryTypeName', 'NG', PyImageGaryTypeName)</l>
+<l>load_config_set_message_Str (MessageHandle, TestPlanIni, CheckParam, 'Py灰度优先级', 'PyImageGaryPriority', '1', PyImageGaryPriority)</l>
+<l>tuple_split(PyImageGaryPriority, '|', PyImageGaryPriority)</l>
+<l>tuple_number(PyImageGaryPriority, PyImageGaryPriority)</l>
+<l>tuple_split(PyImageGaryTypeName, '|', PyImageGaryTypeName)</l>
+<l>set_message_tuple(MessageHandle, 'PyImageGaryTypeName', PyImageGaryTypeName)</l>
+<l>set_message_tuple(MessageHandle, 'PyImageGaryPriority', PyImageGaryPriority)</l>
+<c></c>
+<c></c>
+<c>* </c>
+<c>* </c>
+<c>* </c>
+<c>* </c>
+<c>* </c>
+<l>return ()</l>
+</body>
+<docu id="Init_Python_Memory">
+<parameters>
+<parameter id="CheckParam"/>
+<parameter id="MessageHandle"/>
+<parameter id="TestPlanIni"/>
+</parameters>
+</docu>
+</procedure>
+<procedure name="Check_Floor">
+<interface>
+<io>
+<par name="Image" base_type="iconic" dimension="0"/>
+</io>
+<ic>
+<par name="ShowHide" base_type="ctrl" dimension="0"/>
+<par name="WindowHandle" base_type="ctrl" dimension="0"/>
+<par name="MessageHandle" base_type="ctrl" dimension="0"/>
+</ic>
+<oc>
+<par name="ResultInfo" base_type="ctrl" dimension="0"/>
+<par name="WindowInfo" base_type="ctrl" dimension="0"/>
+<par name="FeatureVals" base_type="ctrl" dimension="2"/>
+</oc>
+</interface>
+<body>
+<c></c>
+<c></c>
+<c></c>
+<c>* </c>
+<c>* Features_retResults_nReginType检测区域类型</c>
+<c>* Features_retResults_strReginType检测类型字符串，返回值为“左面”或“右面”</c>
+<c>* Features_retResults_rectval错误区域外界矩形坐标</c>
+<c>* Features_retResults_ErrorType....................................错误类型</c>
+<c>* Features_retResults_strErrortype ....................................//错误类型字符串，返回值为“暗斑”，“干料”等缺陷中文名称</c>
+<c>* Features_retResults_ErrorContrast//缺陷对比度</c>
+<c>* Features_retResults_ErrorArea// 错误面积</c>
+<c>* Features_retResults_Diameter....................................错误面积</c>
+<c>* Features_retResults_Descript字符串描述</c>
+<c>* Features_retResults_nLevel....................................错误程度</c>
+<c>* Features_retResults_x....................................缺陷水平方向坐标</c>
+<c>* Features_retResults_y....................................缺陷垂直方向坐标</c>
+<c>* Features_retResults_fFeature</c>
+<c>* Features_retResults_ifTag....................................是否打标</c>
+<c>* Features_retResults_TagLength....................................打标持续行数</c>
+<c>* </c>
+<c>* Features_properDynThresh....................................</c>
+<c>* Features_regionWidthPix....................................</c>
+<c>* Features_regionHeightPix....................................  //缺陷本身的宽高</c>
+<c>* Features_errAreaPix;   //像素面积</c>
+<c>* Features_sImgLeft, //生成的小图区域</c>
+<c>* Features_sImgRight, //生成的小图区域</c>
+<c>* Features_sImgTop, //生成的小图区域</c>
+<c>* Features_sImgBotton;  //生成的小图区域</c>
+<c>* Features_ifInterWithEdge;   //是否跟边缘区域有交集</c>
+<c>* Features_ifNearEdge; //是否靠近边缘</c>
+<c>* Features_errHeight ....................................</c>
+<c>* Features_errWidth; ....................................分割的大块边缘区域宽高</c>
+<c>* Features_sImageHeight</c>
+<c>* Features_sImageWidth;   //小图区域宽高</c>
+<c>* Features_ifCrowded....................................是否密度过大</c>
+<c></c>
+<c></c>
+<l>ResultInfo := ''</l>
+<l>WindowInfo := []</l>
+<l>FeatureVals :={}</l>
+<l>get_image_size(Image, Width, Height)</l>
+<c></c>
+<l>Py_Memory_Check (Image, ImageResult, MessageHandle, WindowHandle, ShowHide, Width, Height, [], PyResultVal)</l>
+<l>GetPyFeature (ImageResult, MessageHandle, ShowHide, WindowHandle, PyResultVal, PyResultInfo, PyWindowInfo, PyFeatureVals)</l>
+<c></c>
+<l>ResultInfo:=PyResultInfo</l>
+<c></c>
+<l>FeatureVals :=PyFeatureVals     </l>
+<l>WindowInfo:=PyWindowInfo</l>
+<c>* </c>
+<c>* </c>
+<c></c>
+<l>return ()</l>
+</body>
+<docu id="Check_Floor">
+<parameters>
+<parameter id="FeatureVals"/>
+<parameter id="Image"/>
+<parameter id="MessageHandle"/>
+<parameter id="ResultInfo"/>
+<parameter id="ShowHide"/>
+<parameter id="WindowHandle"/>
+<parameter id="WindowInfo"/>
+</parameters>
+</docu>
+</procedure>
+<procedure name="InitGlobalOnce">
+<interface/>
+<body>
+<l>global tuple g_filemappingMax</l>
+<l>get_current_dir (DirName)</l>
+<l>SystemPath := DirName+'/SystemConfiguration/Global.ini'</l>
+<l>load_config_number(SystemPath, '共享内存区', '数量MAX', 1024, filemappingMax)</l>
+<l>ex_initfilemapping(filemappingMax)</l>
+<l>g_filemappingMax:=int(filemappingMax)</l>
+<l>return ()</l>
+</body>
+<docu id="InitGlobalOnce">
+<parameters/>
+</docu>
+</procedure>
+<procedure name="Py_Memory_Check">
+<interface>
+<io>
+<par name="Image" base_type="iconic" dimension="0"/>
+</io>
+<oo>
+<par name="ImageResult" base_type="iconic" dimension="0"/>
+</oo>
+<ic>
+<par name="MessageHandle" base_type="ctrl" dimension="0"/>
+<par name="WindowHandle" base_type="ctrl" dimension="0"/>
+<par name="ShowHide" base_type="ctrl" dimension="0"/>
+<par name="Width" base_type="ctrl" dimension="0"/>
+<par name="Height" base_type="ctrl" dimension="0"/>
+<par name="ImageInfos" base_type="ctrl" dimension="0"/>
+</ic>
+<oc>
+<par name="ResultVal" base_type="ctrl" dimension="0"/>
+</oc>
+</interface>
+<body>
+<c></c>
+<l>gen_empty_obj(ErrorRegion)</l>
+<c>*是否使用python共享内存方式检测</c>
+<l>get_message_tuple (MessageHandle, 'UsePythonCheck', UsePythonCheck)</l>
+<l>ResultVal := -10</l>
+<l>gen_image_const(ImageResult, 'byte', Width, Height)</l>
+<l>if (UsePythonCheck!=0)</l>
+<c>    * 先将图像写进内存</c>
+<l>    get_message_tuple (MessageHandle, 'FileName_Image_handle', FileName_Image_handle)</l>
+<l>    ex_mapviewoffilewriteimage (Image, FileName_Image_handle, 0)</l>
+<c>    * 写图像信息 宽，高，等其它信息</c>
+<l>    get_message_tuple (MessageHandle, 'FileName_ImageInfo_handle', FileName_ImageInfo_handle)</l>
+<l>    ex_mapviewoffilewrite (FileName_ImageInfo_handle, 2, [Width,Height,ImageInfos], 0)</l>
+<c>    * 获取上一次的结果计数</c>
+<l>    get_message_tuple (MessageHandle, 'FileName_ImageResultN_handle', FileName_ImageResultN_handle)</l>
+<l>    ex_mapviewoffileread (FileName_ImageResultN_handle, 2, 0, 1, ImageResultN)</l>
+<l>    Resulti := ImageResultN</l>
+<c>    * </c>
+<c>    * 触发python检测计数</c>
+<l>    get_message_tuple (MessageHandle, 'FileName_ImageTrigger_handle', FileName_ImageTrigger_handle)</l>
+<l>    ex_mapviewoffileread (FileName_ImageTrigger_handle, 2, 0, 1, ImageTrigger)</l>
+<l>    if (ImageTrigger &gt; 8 or ImageTrigger&lt;0)</l>
+<l>        ImageTrigger := 0</l>
+<l>    else</l>
+<l>        ImageTrigger := ImageTrigger+1</l>
+<l>    endif</l>
+<l>    ex_mapviewoffilewrite (FileName_ImageTrigger_handle, 2, ImageTrigger, 0)</l>
+<c>    * 获取python检测结果</c>
+<l>    get_message_tuple (MessageHandle, 'AICheckTime', AICheckTime)</l>
+<l>    AICheckTime := AICheckTime*0.001</l>
+<l>    count_seconds (Secondstart)</l>
+<c>    </c>
+<l>    while (1)</l>
+<l>        ex_mapviewoffileread (FileName_ImageResultN_handle, 2, 0, 1, ImageResultN)</l>
+<c>        * 如果与上一次结果计数不一致  表示已经完成检测</c>
+<l>        if (ImageResultN!=Resulti)</l>
+<l>            get_message_tuple (MessageHandle, 'FileName_ResultInfo_handle', FileName_ResultInfo_handle)</l>
+<l>            ex_mapviewoffileread (FileName_ResultInfo_handle, 2, 0, 2, ImageResultInfo)</l>
+<l>            get_message_tuple (MessageHandle, 'FileName_ImageResult_handle', FileName_ImageResult_handle)</l>
+<l>            ex_mapviewoffilereadimage(ImageResult, FileName_ImageResult_handle, 0, 0, ImageResultInfo[1], ImageResultInfo[0])</l>
+<l>            ResultVal:=1</l>
+<l>            return()</l>
+<l>        endif</l>
+<l>        count_seconds (Secondend)</l>
+<l>        if (Secondend-Secondstart&gt;AICheckTime)</l>
+<l>            ResultVal := -100</l>
+<l>            return()</l>
+<l>        endif</l>
+<c>        </c>
+<l>    endwhile</l>
+<l>endif</l>
+<c></c>
+<c></c>
+<c> </c>
+<c></c>
+<l>return ()</l>
+</body>
+<docu id="Py_Memory_Check">
+<parameters>
+<parameter id="Height"/>
+<parameter id="Image"/>
+<parameter id="ImageInfos"/>
+<parameter id="ImageResult"/>
+<parameter id="MessageHandle">
+<mixed_type>false</mixed_type>
+<sem_type>message</sem_type>
+<type_list>
+<item>integer</item>
+</type_list>
+</parameter>
+<parameter id="ResultVal"/>
+<parameter id="ShowHide"/>
+<parameter id="Width"/>
+<parameter id="WindowHandle">
+<mixed_type>false</mixed_type>
+<sem_type>window</sem_type>
+<type_list>
+<item>integer</item>
+</type_list>
+</parameter>
+</parameters>
+</docu>
+</procedure>
+<procedure name="GetPyFeature">
+<interface>
+<io>
+<par name="ImageResult" base_type="iconic" dimension="0"/>
+</io>
+<ic>
+<par name="MessageHandle" base_type="ctrl" dimension="0"/>
+<par name="ShowHide" base_type="ctrl" dimension="0"/>
+<par name="WindowHandle" base_type="ctrl" dimension="0"/>
+<par name="PyResultVal" base_type="ctrl" dimension="0"/>
+</ic>
+<oc>
+<par name="ResultInfo" base_type="ctrl" dimension="0"/>
+<par name="WindowInfo" base_type="ctrl" dimension="0"/>
+<par name="FeatureVals" base_type="ctrl" dimension="2"/>
+</oc>
+</interface>
+<body>
+<l>FeatureVal:={}</l>
+<l>FeatureVals:={}</l>
+<l>WindowInfo:=''</l>
+<l>get_message_tuple(MessageHandle, 'PyCheckTimeOutResult', PyCheckTimeOutResult)</l>
+<l>get_message_tuple(MessageHandle, 'PyCheckErrorResult', PyCheckTimeOutResult)</l>
+<l>get_message_tuple(MessageHandle, 'PyDefaultResult', PyDefaultResult)</l>
+<l>get_message_tuple(MessageHandle, 'PyFileIndex', PyFileIndex)</l>
+<l>WindowInfo:='Py内存区号:'+PyFileIndex</l>
+<l>ResultInfo:=''</l>
+<l>if(PyResultVal==-10)</l>
+<c>    *没有检测</c>
+<l>    ResultInfo:=PyDefaultResult</l>
+<l>    WindowInfo:='AI_没有检测'</l>
+<l>elseif(PyResultVal==-100)</l>
+<c>    *检测超时</c>
+<l>    ResultInfo:=PyCheckTimeOutResult</l>
+<l>    WindowInfo:='AI_检测超时'</l>
+<l>elseif(PyResultVal==1)</l>
+<l>    get_message_tuple(MessageHandle, 'PyImageDefaultTypeName', ResultInfo)</l>
+<l>    get_message_tuple(MessageHandle, 'PyImageGaryTypeName', PyImageGaryTypeName)</l>
+<l>    get_message_tuple(MessageHandle, 'PyImageGaryPriority', PyImageGaryPriority)</l>
+<l>    tuple_min([|PyImageGaryTypeName|,|PyImageGaryPriority|], MinNum)</l>
+<l>    for GrayIndex := 0 to MinNum-1 by 1</l>
+<l>        threshold(ImageResult, GrayRegion, PyImageGaryPriority[GrayIndex], PyImageGaryPriority[GrayIndex])</l>
+<l>        area_center(GrayRegion, GrayArea, GrayRow, GrayColumn)</l>
+<l>        if(GrayArea&gt;0)</l>
+<l>            if(ShowHide)</l>
+<l>                disp_obj(GrayRegion, WindowHandle)</l>
+<l>            endif</l>
+<l>            FeatureVal.insert(FeatureVal.length(),['Features_retResults_nRegionType',PyImageGaryPriority[GrayIndex]])</l>
+<l>            FeatureVal.insert(FeatureVal.length(),['Features_retResults_ErrorArea',int(GrayArea)])</l>
+<l>            FeatureVal.insert(FeatureVal.length(),['Features_retResults_x',int(GrayColumn)])</l>
+<l>            FeatureVal.insert(FeatureVal.length(),['Features_retResults_y',int(GrayRow)])</l>
+<l>            diameter_region(GrayRegion, Row11, Column11, Row21, Column21, Diameter)</l>
+<l>            FeatureVal.insert(FeatureVal.length(),['Features_retResults_Diameter',int(Diameter)])</l>
+<l>            smallest_rectangle1 (GrayRegion, Row1, Column1, Row2, Column2)</l>
+<l>            FeatureVal.insert(FeatureVal.length(),['Features_retResults_rectvals',[int(Column1),int(Row1), int(Column2) , int(Row2)]])</l>
+<l>            FeatureVal.insert(FeatureVal.length(),['Features_retResults_ifTag',0])</l>
+<l>            FeatureVal.insert(FeatureVal.length(),['Features_retResults_Alarm',0])</l>
+<l>            FeatureVals.insert(FeatureVals.length(),FeatureVal)</l>
+<l>            ResultInfo:=PyImageGaryTypeName[GrayIndex]</l>
+<c>            </c>
+<l>            if(ShowHide)</l>
+<l>                set_color(WindowHandle, 'red')</l>
+<l>                disp_obj(GrayRegion, WindowHandle)</l>
+<l>                set_color(WindowHandle, 'green')</l>
+<l>            endif</l>
+<l>            break</l>
+<l>        endif</l>
+<l>    endfor</l>
+<l>endif</l>
+<c></c>
+<l>get_message_tuple(MessageHandle, 'Py_ResultUse', Py_ResultUse)</l>
+<l>if(Py_ResultUse!=1)</l>
+<l>    ResultInfo:=PyDefaultResult</l>
+<l>    WindowInfo:=WindowInfo+'\r\nAI_Result禁用'</l>
+<l>endif</l>
+<l>if(ResultInfo=='')</l>
+<l>     ResultInfo:=PyDefaultResult</l>
+<l>endif</l>
+<l>WindowInfo:=WindowInfo+'\r\nAI_检测:'+ResultInfo</l>
+<c></c>
+<c></c>
+<l>return ()</l>
+</body>
+<docu id="GetPyFeature">
+<parameters>
+<parameter id="FeatureVals"/>
+<parameter id="ImageResult"/>
+<parameter id="MessageHandle"/>
+<parameter id="PyResultVal"/>
+<parameter id="ResultInfo"/>
+<parameter id="ShowHide"/>
+<parameter id="WindowHandle"/>
+<parameter id="WindowInfo"/>
+</parameters>
+</docu>
+</procedure>
+<procedure name="SaveImageThread">
+<interface>
+<io>
+<par name="Image" base_type="iconic" dimension="0"/>
+</io>
+<ic>
+<par name="Format" base_type="ctrl" dimension="0"/>
+<par name="fillcolor" base_type="ctrl" dimension="0"/>
+<par name="filename" base_type="ctrl" dimension="0"/>
+</ic>
+</interface>
+<body>
+<l>par_start&lt;ThreadID&gt; : write_image(Image, Format, fillcolor, filename)</l>
+<l>return ()</l>
+</body>
+<docu id="SaveImageThread">
+<parameters>
+<parameter id="Format"/>
+<parameter id="Image"/>
+<parameter id="filename"/>
+<parameter id="fillcolor"/>
+</parameters>
+</docu>
+</procedure>
+<procedure name="Init_BottomSurfaceDetection">
+<interface>
+<ic>
+<par name="CurrentScheme" base_type="ctrl" dimension="0"/>
+<par name="CheckParam" base_type="ctrl" dimension="0"/>
+<par name="MessageHandle" base_type="ctrl" dimension="0"/>
+</ic>
+</interface>
+<body>
+<c></c>
+<l>get_message_tuple( MessageHandle,'DiameterVal',DiameterVal)</l>
+<l>get_message_tuple( MessageHandle,'Diameter_offset',Diameter_offset)</l>
+<l>get_message_tuple( MessageHandle,'DiameterMinMax',DiameterMinMax)</l>
+<c></c>
+<l>* load_config_number (CurrentScheme, CurrentScheme[0], '导针间距', 6, GuidepinVal)</l>
+<l>* load_config (CurrentScheme, CurrentScheme[0], '导针间距容差', 0.5, Guidepin_offset)</l>
+<l>* GuidepinMinMax:=[GuidepinVal-Guidepin_offset,GuidepinVal+Guidepin_offset]</l>
+<l>* set_message_tuple( MessageHandle,'GuidepinMinMax',GuidepinMinMax)</l>
+<c></c>
+<l>load_config_split_numeber(CurrentScheme,  CheckParam[0], '产品中心',  '1190,1193',',', ProductCentre)</l>
+<l>set_message_tuple(MessageHandle, 'ProductCentre', ProductCentre)</l>
+<l>get_message_tuple (MessageHandle, 'resolutionratio',  resolutionratio)</l>
+<c>*生成判断是否空料的区域</c>
+<l>EmptyRegionVals:=[ProductCentre[0],ProductCentre[1]-1.0*DiameterVal/resolutionratio/2,ProductCentre[0],ProductCentre[1]+1.0*DiameterVal/resolutionratio/2]</l>
+<l>gen_rectangle1(EmptyRegion, EmptyRegionVals[0], EmptyRegionVals[1], EmptyRegionVals[2], EmptyRegionVals[3])</l>
+<l>set_message_obj(EmptyRegion,MessageHandle, 'EmptyRegion')</l>
+<l>set_message_tuple(MessageHandle, 'EmptyRegionVals', EmptyRegionVals)</l>
+<c></c>
+<c>*生成产品预处理检测区域</c>
+<l>wh:=1.0*DiameterVal/resolutionratio/2+100</l>
+<l>CheckRegionVals:=[ProductCentre[0]-wh,ProductCentre[1]-wh,ProductCentre[0]+wh,ProductCentre[1]+wh]</l>
+<l>gen_rectangle1(CheckRegion, CheckRegionVals[0], CheckRegionVals[1], CheckRegionVals[2], CheckRegionVals[3])</l>
+<l>set_message_obj(CheckRegion,MessageHandle, 'CheckRegion')</l>
+<l>set_message_tuple(MessageHandle, 'CheckRegionVals', CheckRegionVals)</l>
+<c></c>
+<c></c>
+<c></c>
+<c></c>
+<l>load_config_set_message_Number(MessageHandle, CurrentScheme, CheckParam[0], 'thresholdval', 'thresholdval', 140, thresholdval)</l>
+<l>load_config_set_message_Number(MessageHandle, CurrentScheme, CheckParam[0], 'erosion_dilation', 'erosion_dilation', 15, erosion_dilation)</l>
+<c></c>
+<c></c>
+<l>return ()</l>
+</body>
+<docu id="Init_BottomSurfaceDetection">
+<parameters>
+<parameter id="CheckParam"/>
+<parameter id="CurrentScheme"/>
+<parameter id="MessageHandle"/>
+</parameters>
+</docu>
+</procedure>
+<procedure name="load_config_note">
+<interface>
+<ic>
+<par name="filename" base_type="ctrl" dimension="0"/>
+<par name="section" base_type="ctrl" dimension="0"/>
+<par name="key" base_type="ctrl" dimension="0"/>
+<par name="Defaultval" base_type="ctrl" dimension="0"/>
+<par name="Note" base_type="ctrl" dimension="0"/>
+</ic>
+<oc>
+<par name="val" base_type="ctrl" dimension="0"/>
+</oc>
+</interface>
+<body>
+<l>load_config (filename, section, key, Defaultval, val)</l>
+<l>load_config (filename, section, key+'_注释', Note, lsmessage)</l>
+<l>return ()</l>
+</body>
+<docu id="load_config_note">
+<parameters>
+<parameter id="Defaultval"/>
+<parameter id="Note"/>
+<parameter id="filename"/>
+<parameter id="key"/>
+<parameter id="section"/>
+<parameter id="val"/>
+</parameters>
+</docu>
+</procedure>
+<procedure name="Init_BottomConvexDetection">
+<interface>
+<ic>
+<par name="CurrentScheme" base_type="ctrl" dimension="0"/>
+<par name="lsCheckParam" base_type="ctrl" dimension="0"/>
+<par name="MessageHandle" base_type="ctrl" dimension="0"/>
+</ic>
+</interface>
+<body>
+<l>    load_config_ValByType (CurrentScheme, lsCheckParam[0], 'PreprocessingRegion', 'rectangle1', '585,1246,1197,1421', PreprocessingRegionstr)</l>
+<l>    gen_region_byTypeAndStr (PreprocessingRegion, 'rectangle1', PreprocessingRegionstr, vals)</l>
+<l>    set_message_obj(PreprocessingRegion, MessageHandle,'PreprocessingRegion')</l>
+<c>    </c>
+<l>    load_config_set_message_Number(MessageHandle, CurrentScheme, lsCheckParam[0], '缺陷灰度最低值', 'ThresholdMinGray', 160, ThresholdMinGray)</l>
+<l>    load_config_set_message_Number(MessageHandle, CurrentScheme, lsCheckParam[0], '缺陷灰度最高值', 'ThresholdMaxGray', 255, ThresholdMaxGray)</l>
+<c>    </c>
+<l>    load_config_set_message_Number(MessageHandle, CurrentScheme, lsCheckParam[0], '缺陷像素面积', 'ErrorAreaMax', 20, ErrorAreaMax)</l>
+<c>    </c>
+<c>    </c>
+<l>return ()</l>
+</body>
+<docu id="Init_BottomConvexDetection">
+<parameters>
+<parameter id="CurrentScheme"/>
+<parameter id="MessageHandle"/>
+<parameter id="lsCheckParam"/>
+</parameters>
+</docu>
+</procedure>
+<procedure name="gen_measure_rectangle2_TmpCtrl">
+<interface>
+<ic>
+<par name="LineRowStart_Measure_01_0" base_type="ctrl" dimension="0"/>
+<par name="LineRowEnd_Measure_01_0" base_type="ctrl" dimension="0"/>
+<par name="LineColumnStart_Measure_01_0" base_type="ctrl" dimension="0"/>
+<par name="LineColumnEnd_Measure_01_0" base_type="ctrl" dimension="0"/>
+<par name="RoiWidthLen2" base_type="ctrl" dimension="0"/>
+</ic>
+<oc>
+<par name="measureTmpCtrl" base_type="ctrl" dimension="0"/>
+</oc>
+</interface>
+<body>
+<l>TmpCtrl_Row := 0.5*(LineRowStart_Measure_01_0+LineRowEnd_Measure_01_0)</l>
+<l>TmpCtrl_Column := 0.5*(LineColumnStart_Measure_01_0+LineColumnEnd_Measure_01_0)</l>
+<l>TmpCtrl_Dr := LineRowStart_Measure_01_0-LineRowEnd_Measure_01_0</l>
+<l>TmpCtrl_Dc := LineColumnEnd_Measure_01_0-LineColumnStart_Measure_01_0</l>
+<l>TmpCtrl_Phi := atan2(TmpCtrl_Dr, TmpCtrl_Dc)</l>
+<l>TmpCtrl_Len1 := 0.5*sqrt(TmpCtrl_Dr*TmpCtrl_Dr + TmpCtrl_Dc*TmpCtrl_Dc)</l>
+<l>TmpCtrl_Len2 := RoiWidthLen2</l>
+<l>measureTmpCtrl := [TmpCtrl_Row, TmpCtrl_Column, TmpCtrl_Phi, TmpCtrl_Len1, TmpCtrl_Len2]</l>
+<l>return ()</l>
+</body>
+<docu id="gen_measure_rectangle2_TmpCtrl">
+<parameters>
+<parameter id="LineColumnEnd_Measure_01_0"/>
+<parameter id="LineColumnStart_Measure_01_0"/>
+<parameter id="LineRowEnd_Measure_01_0"/>
+<parameter id="LineRowStart_Measure_01_0"/>
+<parameter id="RoiWidthLen2"/>
+<parameter id="measureTmpCtrl"/>
+</parameters>
+</docu>
+</procedure>
+<procedure name="Init_SideMeasurementDetection">
+<interface>
+<ic>
+<par name="CurrentScheme" base_type="ctrl" dimension="0"/>
+<par name="CheckParam" base_type="ctrl" dimension="0"/>
+<par name="MessageHandle" base_type="ctrl" dimension="0"/>
+</ic>
+</interface>
+<body>
+<l>    get_message_tuple( MessageHandle,'resolutionratio',resolutionratio)</l>
+<c>    *束腰区域</c>
+<l>    load_config_ValByType (CurrentScheme, CheckParam[0], '夹爪区域', 'rectangle1', '210,1000,1425,1490', ClawRectstr)</l>
+<l>    tuple_split(ClawRectstr, ',', Substrings)</l>
+<l>    tuple_number(Substrings, ClawRectVal)</l>
+<l>    set_message_tuple( MessageHandle,'ClawRectVal',ClawRectVal)</l>
+<c>    </c>
+<c>    </c>
+<l>    load_config_set_message_Number (MessageHandle,CurrentScheme, CheckParam[0], '产品分割线R','GuideCutOffRuleR',  1024, GuideCutOffRuleR)</l>
+<c></c>
+<c>    </c>
+<l>    load_config_number (CurrentScheme, CheckParam[0], '直径测量宽度(mm)', 5, DiameterMeasureW_mm)</l>
+<l>    DiameterMeasureW_mm:=DiameterMeasureW_mm/resolutionratio</l>
+<l>    set_message_tuple( MessageHandle,'DiameterMeasureW_mm',DiameterMeasureW_mm)</l>
+<l>    load_config_number (CurrentScheme, CheckParam[0], '导针间距测量宽度(mm)', 1, GuidepinMeasureW_mm)</l>
+<l>    GuidepinMeasureW_mm:=GuidepinMeasureW_mm/resolutionratio</l>
+<l>    set_message_tuple( MessageHandle,'GuidepinMeasureW_mm',GuidepinMeasureW_mm)</l>
+<c>    </c>
+<c>    </c>
+<c>    </c>
+<l>*     gen_rectangle1(DiameterRect, ClawRectVal[0], ClawRectVal[1]-DiameterMeasureW_mm, ClawRectVal[2], ClawRectVal[1])</l>
+<l>    gen_rectangle1(DiameterRect1, ClawRectVal[0], ClawRectVal[1]-DiameterMeasureW_mm,GuideCutOffRuleR, ClawRectVal[1])</l>
+<l>    gen_rectangle1(DiameterRect2,GuideCutOffRuleR, ClawRectVal[1]-DiameterMeasureW_mm, ClawRectVal[2], ClawRectVal[1])</l>
+<c>       </c>
+<c>    </c>
+<l>    set_message_obj(DiameterRect1,MessageHandle,'DiameterRect1')</l>
+<l>    set_message_obj(DiameterRect2,MessageHandle,'DiameterRect2')</l>
+<c>    </c>
+<l>*     gen_rectangle1(GuideRect, ClawRectVal[0], ClawRectVal[3], ClawRectVal[2], ClawRectVal[3]+GuidepinMeasureW_mm)</l>
+<l>    gen_rectangle1(GuideRect1, ClawRectVal[0], ClawRectVal[3], GuideCutOffRuleR, ClawRectVal[3]+GuidepinMeasureW_mm)</l>
+<l>    gen_rectangle1(GuideRect2, GuideCutOffRuleR, ClawRectVal[3], ClawRectVal[2], ClawRectVal[3]+GuidepinMeasureW_mm)</l>
+<l>    set_message_obj(GuideRect1,MessageHandle,'GuideRect1')</l>
+<l>    set_message_obj(GuideRect2,MessageHandle,'GuideRect2')</l>
+<c>    </c>
+<c> </c>
+<l>    get_message_tuple( MessageHandle,'DiameterVal',DiameterVal)</l>
+<l>    get_message_tuple( MessageHandle,'Diameter_offset',Diameter_offset)</l>
+<l>    get_message_tuple( MessageHandle,'DiameterMinMax',DiameterMinMax)</l>
+<c></c>
+<c></c>
+<l>load_config_number (CurrentScheme, CheckParam[0], '导针间距', 7, GuidepinVal)</l>
+<l>load_config_number (CurrentScheme, CheckParam[0], '导针间距容差', 1, Guidepin_offset)</l>
+<l>GuidepinMinMax:=[GuidepinVal-Guidepin_offset,GuidepinVal+Guidepin_offset]</l>
+<l>set_message_tuple( MessageHandle,'GuidepinMinMax',GuidepinMinMax)</l>
+<c></c>
+<l>return ()</l>
+</body>
+<docu id="Init_SideMeasurementDetection">
+<parameters>
+<parameter id="CheckParam"/>
+<parameter id="CurrentScheme"/>
+<parameter id="MessageHandle"/>
+</parameters>
+</docu>
+</procedure>
+<procedure name="Init_TopSurfaceDetection">
+<interface>
+<ic>
+<par name="CurrentScheme" base_type="ctrl" dimension="0"/>
+<par name="lsCheckParam" base_type="ctrl" dimension="0"/>
+<par name="MessageHandle" base_type="ctrl" dimension="0"/>
+</ic>
+</interface>
+<body>
+<c></c>
+<l>get_message_tuple (MessageHandle, 'DiameterVal',  DiameterVal)</l>
+<l>get_message_tuple (MessageHandle, 'Diameter_offset',  Diameter_offset)</l>
+<c></c>
+<l>get_message_tuple( MessageHandle,'DiameterMinMax',DiameterMinMax)</l>
+<c></c>
+<c></c>
+<l>get_message_tuple (MessageHandle, 'GuidepinVal',  GuidepinVal)</l>
+<l>get_message_tuple (MessageHandle, 'Guidepin_offset',  Guidepin_offset)</l>
+<l>get_message_tuple (MessageHandle, 'GuidepinMinMax',  GuidepinMinMax)</l>
+<c></c>
+<c></c>
+<c></c>
+<c></c>
+<l>load_config_split_numeber(CurrentScheme,  lsCheckParam[0], '产品中心',  '1000,1369',',', ProductCentre)</l>
+<l>set_message_tuple(MessageHandle, 'ProductCentre', ProductCentre)</l>
+<l>get_message_tuple (MessageHandle, 'resolutionratio',  resolutionratio)</l>
+<c>*生成判断是否空料的区域</c>
+<l>EmptyRegionVals:=[ProductCentre[0]-1.0*DiameterVal/resolutionratio/2,ProductCentre[1],ProductCentre[0]+1.0*DiameterVal/resolutionratio/2,ProductCentre[1]]</l>
+<l>gen_rectangle1(EmptyRegion, EmptyRegionVals[0], EmptyRegionVals[1], EmptyRegionVals[2], EmptyRegionVals[3])</l>
+<l>set_message_obj(EmptyRegion,MessageHandle, 'EmptyRegion')</l>
+<l>set_message_tuple(MessageHandle, 'EmptyRegionVals', EmptyRegionVals)</l>
+<c></c>
+<c>*生成产品预处理检测区域</c>
+<l>wh:=1.0*DiameterVal/resolutionratio/2+100</l>
+<l>CheckRegionVals:=[ProductCentre[0]-wh,ProductCentre[1]-wh,ProductCentre[0]+wh,ProductCentre[1]+wh]</l>
+<l>gen_rectangle1(CheckRegion, CheckRegionVals[0], CheckRegionVals[1], CheckRegionVals[2], CheckRegionVals[3])</l>
+<l>set_message_obj(CheckRegion,MessageHandle, 'CheckRegion')</l>
+<l>set_message_tuple(MessageHandle, 'CheckRegionVals', CheckRegionVals)</l>
+<c></c>
+<c></c>
+<l>set_message_tuple( MessageHandle,'GuidepinMinMax',GuidepinMinMax)</l>
+<c></c>
+<c></c>
+<l>    load_config_number(CurrentScheme, lsCheckParam[0], 'thresholdval', 140, val)</l>
+<l>    set_message_tuple( MessageHandle,'thresholdval',val)</l>
+<l>    load_config_number(CurrentScheme, lsCheckParam[0], 'erosion_dilation', 15, val)</l>
+<l>    set_message_tuple( MessageHandle,'erosion_dilation',val)</l>
+<c>    </c>
+<l>return ()</l>
+</body>
+<docu id="Init_TopSurfaceDetection">
+<parameters>
+<parameter id="CurrentScheme"/>
+<parameter id="MessageHandle"/>
+<parameter id="lsCheckParam"/>
+</parameters>
+</docu>
+</procedure>
+<procedure name="load_config_set_message_Str">
+<interface>
+<ic>
+<par name="MessageHandle" base_type="ctrl" dimension="0"/>
+<par name="ParamSettingsFile" base_type="ctrl" dimension="0"/>
+<par name="section" base_type="ctrl" dimension="0"/>
+<par name="Inikey" base_type="ctrl" dimension="0"/>
+<par name="MessageKey" base_type="ctrl" dimension="0"/>
+<par name="Defaultval" base_type="ctrl" dimension="0"/>
+</ic>
+<oc>
+<par name="val" base_type="ctrl" dimension="0"/>
+</oc>
+</interface>
+<body>
+<l>load_config (ParamSettingsFile, section, Inikey, Defaultval, val)</l>
+<l>set_message_tuple (MessageHandle, MessageKey, val)</l>
+<c>* </c>
+<c>* </c>
+<l>return ()</l>
+</body>
+<docu id="load_config_set_message_Str">
+<parameters>
+<parameter id="Defaultval">
+<sem_type>string</sem_type>
+</parameter>
+<parameter id="Inikey"/>
+<parameter id="MessageHandle"/>
+<parameter id="MessageKey"/>
+<parameter id="ParamSettingsFile"/>
+<parameter id="section"/>
+<parameter id="val">
+<sem_type>string</sem_type>
+</parameter>
+</parameters>
+</docu>
+</procedure>
+<procedure name="Init_OCRFlawDetection">
+<interface>
+<ic>
+<par name="CurrentScheme" base_type="ctrl" dimension="0"/>
+<par name="CheckParam" base_type="ctrl" dimension="0"/>
+<par name="DirPath" base_type="ctrl" dimension="0"/>
+<par name="MessageHandle" base_type="ctrl" dimension="0"/>
+</ic>
+</interface>
+<body>
+<c>*获得预处理图像的分割区域</c>
+<l>load_config_set_message_Number(MessageHandle, CurrentScheme, CheckParam[0], '图像增强', 'ImageAdd', 0.5, ImageAdd)</l>
+<l>get_message_tuple(MessageHandle, 'ProductHeight', ProductHeight)</l>
+<l>load_config_set_message_Number(MessageHandle, CurrentScheme, CheckParam[0], '产品最低点', 'PosRowMax', 3275, PosRowMax)</l>
+<l>get_message_tuple (MessageHandle,'Resolution_H', Resolution_H)</l>
+<l>PosRowMin:=PosRowMax-1.0*ProductHeight/Resolution_H-10</l>
+<l>set_message_tuple(MessageHandle, 'PosRowMin', PosRowMin)</l>
+<c></c>
+<c></c>
+<l>get_current_dir(DirName)</l>
+<l>get_message_tuple( MessageHandle,'OCRSigns',OCRSigns)</l>
+<l>for Index := 0 to |OCRSigns|-1 by 1</l>
+<c>    </c>
+<l>    get_message_tuple( MessageHandle,OCRSigns[Index]+'_val',OCRval)</l>
+<c></c>
+<l>    load_config_set_message_Number(MessageHandle, CurrentScheme, CheckParam[0], OCRSigns[Index]+'结果启用', OCRSigns[Index]+'_ResultUse', 1, val)</l>
+<l>    load_config_set_message_Str(MessageHandle, CurrentScheme, CheckParam[0], OCRSigns[Index]+'shmdfm', OCRSigns[Index]+'_shmdfm', 'dfm', val)</l>
+<l>    get_message_tuple( MessageHandle,OCRSigns[Index]+'_Direction',OCRDirection)</l>
+<l>    load_config_set_message_Str (MessageHandle, CurrentScheme, CheckParam[0], OCRSigns[Index]+'_shmFile', OCRSigns[Index]+'_shmFile', OCRSigns[Index]+'_model.shm', shmfile)</l>
+<l>    read_shape_model (DirName+'\\'+ shmfile, shmModelId)</l>
+<l>    set_message_tuple(MessageHandle, OCRSigns[Index]+'_shmModelId', shmModelId)</l>
+<l>    set_message_tuple(MessageHandle, OCRSigns[Index]+'_shmModelId_CloseClear', 'clear_shape_model')</l>
+<l>    get_shape_model_contours(ModelContours,shmModelId , 1)</l>
+<l>    gen_region_contour_xld(ModelContours, Region1, 'filled')</l>
+<l>    union1(Region1, RegionUnion)</l>
+<l>    smallest_rectangle1(RegionUnion, Row1, Column1, Row2, Column2)</l>
+<l>    shmLen:=strlen(OCRval)</l>
+<l>    shmps:=[-Row2-25,-(Column2+3)*(shmLen+1),Row2+10,Column2]</l>
+<l>    set_message_tuple(MessageHandle, OCRSigns[Index]+'_shmps', shmps)</l>
+<c></c>
+<l>    load_config_set_message_Str (MessageHandle, CurrentScheme, CheckParam[0],  OCRSigns[Index]+'_dfmFile',  OCRSigns[Index]+'_dfmFile', OCRSigns[Index]+'_model.dfm', dfmfile)</l>
+<l>    read_deformable_model (DirPath+'\\'+ dfmfile, dfmModelId)</l>
+<l>    set_message_tuple(MessageHandle, OCRSigns[Index]+'_dfmModelId', dfmModelId)</l>
+<l>    set_message_tuple(MessageHandle, OCRSigns[Index]+'_dfmModelId_CloseClear', 'clear_deformable_model')</l>
+<l>    get_deformable_model_contours(ModelContours,dfmModelId , 1)</l>
+<l>    gen_region_contour_xld(ModelContours, Region1, 'filled')</l>
+<l>    union1(Region1, RegionUnion)</l>
+<l>    smallest_rectangle1(RegionUnion, Row1, Column1, Row2, Column2)</l>
+<l>    dfmLen:=strlen(OCRval)</l>
+<l>    dfmps:=[-Row2-25,-(Column2+3)*(dfmLen+1),Row2+10,Column2]</l>
+<l>    set_message_tuple(MessageHandle, OCRSigns[Index]+'_dfmps', dfmps)</l>
+<c>    </c>
+<l>    load_config_split_numeber(CurrentScheme, CheckParam[0], OCRSigns[Index]+'_RectVal', '2591,1736,2718,2005',',', Rectval)</l>
+<l>    set_message_tuple(MessageHandle, OCRSigns[Index]+'_RectVal', Rectval)</l>
+<l>    create_text_model_reader ('manual', [], TextModel)</l>
+<l>    get_message_tuple(MessageHandle, 'TextModel_polarity', TextModel_polarity)</l>
+<l>    set_text_model_param (TextModel, 'polarity', TextModel_polarity)</l>
+<c></c>
+<l>    set_text_model_param (TextModel, 'is_dotprint', 'true')</l>
+<l>    set_text_model_param (TextModel, 'char_width', 53)</l>
+<l>    set_text_model_param (TextModel, 'char_height', 81)</l>
+<l>    set_text_model_param (TextModel, 'stroke_width', 8)</l>
+<l>    set_text_model_param (TextModel, 'return_punctuation', 'false')</l>
+<l>    set_text_model_param (TextModel, 'return_separators', 'false')</l>
+<l>    set_text_model_param (TextModel, 'uppercase_only', 'true')</l>
+<l>    set_text_model_param (TextModel, 'fragment_size_min', 16)</l>
+<l>    set_text_model_param (TextModel, 'eliminate_border_blobs', 'true')</l>
+<l>    set_text_model_param (TextModel, 'base_line_tolerance', 0.2)</l>
+<l>    set_text_model_param (TextModel, 'max_line_num', 1)</l>
+<l>    read_ocr_class_mlp ('DotPrint_0-9.omc', OcrHandle)</l>
+<l>    set_message_tuple(MessageHandle, OCRSigns[Index]+'OcrHandle', OcrHandle)</l>
+<l>    set_message_tuple(MessageHandle, OCRSigns[Index]+'TextModel', TextModel)</l>
+<l>    set_message_tuple(MessageHandle, OCRSigns[Index]+'OcrHandle_CloseClear', 'clear_ocr_class_mlp')</l>
+<l>    set_message_tuple(MessageHandle, OCRSigns[Index]+'TextModel_CloseClear', 'clear_text_model')</l>
+<c></c>
+<l>endfor</l>
+<c></c>
+<c></c>
+<c></c>
+<c></c>
+<c></c>
+<c></c>
+<c></c>
+<l>* load_config_set_message_Number (MessageHandle, CurrentScheme, CheckParam[0], 'OCR文件路径', 'FilePath', 35, FilePath)</l>
+<c></c>
+<c></c>
+<c></c>
+<c></c>
+<c></c>
+</body>
+<docu id="Init_OCRFlawDetection">
+<parameters>
+<parameter id="CheckParam"/>
+<parameter id="CurrentScheme"/>
+<parameter id="DirPath"/>
+<parameter id="MessageHandle"/>
+</parameters>
+</docu>
+</procedure>
+<procedure name="Check_DownSur">
+<interface>
+<io>
+<par name="Image" base_type="iconic" dimension="0"/>
+</io>
+<ic>
+<par name="ShowHide" base_type="ctrl" dimension="0"/>
+<par name="WindowHandle" base_type="ctrl" dimension="0"/>
+<par name="MessageHandle" base_type="ctrl" dimension="0"/>
+</ic>
+<oc>
+<par name="ResultInfo" base_type="ctrl" dimension="0"/>
+<par name="WindowInfo" base_type="ctrl" dimension="0"/>
+<par name="FeatureVals" base_type="ctrl" dimension="2"/>
+</oc>
+</interface>
+<body>
+<l>ResultInfo := 'OK'</l>
+<l>WindowInfo:=''</l>
+<l>FeatureVals:={}</l>
+<l>get_image_size(Image, Width, Height)</l>
+<l>get_message_tuple( MessageHandle,'thresholdval',thresholdval)</l>
+<l>get_message_tuple( MessageHandle,'erosion_dilation',erosion_dilation)</l>
+<c></c>
+<c></c>
+<c>*'产品中心'</c>
+<l>get_message_tuple(MessageHandle, 'ProductCentre', ProductCentre)</l>
+<l>get_message_obj(EmptyRegion,MessageHandle, 'EmptyRegion')</l>
+<c>*判断是否空料的区域</c>
+<l>get_message_obj(EmptyRegion,MessageHandle, 'EmptyRegion')</l>
+<l>get_message_tuple(MessageHandle, 'EmptyRegionVals', EmptyRegionVals)</l>
+<l>reduce_domain(Image, EmptyRegion, ImageReduced1)</l>
+<l>threshold(ImageReduced1, Region, 0, 230)</l>
+<l>count_obj(Region, Number)</l>
+<l>if(Number&gt;=1)</l>
+<l>    area_center(Region, Area, Row6, Column1)</l>
+<l>    if(Area&lt;200)</l>
+<l>        ResultInfo := '空料'</l>
+<l>        return()</l>
+<l>    endif</l>
+<l>endif</l>
+<c></c>
+<c></c>
+<l>Py_Memory_Check (Image, ImageResult, MessageHandle, WindowHandle, ShowHide, Width, Height, [], PyResultVal)</l>
+<l>GetPyFeature (ImageResult, MessageHandle, ShowHide, WindowHandle, PyResultVal, PyResultInfo, PyWindowInfo, PyFeatureVals)</l>
+<l>ResultInfo := PyResultInfo </l>
+<c></c>
+<c></c>
+<l>WindowInfo:=PyWindowInfo</l>
+<l>FeatureVals:=PyFeatureVals</l>
+<c></c>
+<c></c>
+<l>return ()</l>
+</body>
+<docu id="Check_DownSur">
+<parameters>
+<parameter id="FeatureVals"/>
+<parameter id="Image"/>
+<parameter id="MessageHandle"/>
+<parameter id="ResultInfo"/>
+<parameter id="ShowHide"/>
+<parameter id="WindowHandle"/>
+<parameter id="WindowInfo"/>
+</parameters>
+</docu>
+</procedure>
+<procedure name="Check_Sur">
+<interface>
+<io>
+<par name="PreprocessImage" base_type="iconic" dimension="0"/>
+</io>
+<ic>
+<par name="ShowHide" base_type="ctrl" dimension="0"/>
+<par name="WindowHandle" base_type="ctrl" dimension="0"/>
+<par name="MessageHandle" base_type="ctrl" dimension="0"/>
+</ic>
+<oc>
+<par name="ResultInfo" base_type="ctrl" dimension="0"/>
+<par name="WindowInfo" base_type="ctrl" dimension="0"/>
+<par name="FeatureVals" base_type="ctrl" dimension="2"/>
+</oc>
+</interface>
+<body>
+<l>ResultInfo := 'OK'</l>
+<l>WindowInfo:=[]</l>
+<l>FeatureVals:={}    </l>
+<c></c>
+<l>get_image_size(PreprocessImage, Width, Height)</l>
+<c></c>
+<l>get_image_pointer1(PreprocessImage, Pointer, Type, Width, Height)</l>
+<l>get_message_tuple( MessageHandle,'UsePythonCheck',UsePythonCheck)</l>
+<l>set_message_tuple( MessageHandle,'PythonImageInfo',[0,Pointer,Width,Height])</l>
+<c></c>
+<c></c>
+<l>get_message_obj(PreprocessingRegion, MessageHandle, 'PreprocessingRegion')</l>
+<l>if(ShowHide)</l>
+<l>    disp_obj(PreprocessingRegion, WindowHandle)</l>
+<l>endif</l>
+<l>reduce_domain (PreprocessImage, PreprocessingRegion, ImageReduced)</l>
+<l>get_message_tuple(MessageHandle, 'ThresholdMinGray', ThresholdMinGray)</l>
+<l>get_message_tuple(MessageHandle, 'ThresholdMaxGray', ThresholdMaxGray)</l>
+<l>threshold(ImageReduced, ErrorRegion, ThresholdMinGray, ThresholdMaxGray)</l>
+<l>area_center (ErrorRegion, Area, Row, Column)</l>
+<l>get_message_tuple (MessageHandle, 'ErrorAreaMax', ErrorAreaMax)</l>
+<l>if(Area&gt;0 and ShowHide)</l>
+<l>    disp_obj(ErrorRegion, WindowHandle)</l>
+<l>endif</l>
+<l>if (Area&gt;ErrorAreaMax)</l>
+<l>    ResultInfo := 'NG'</l>
+<l>endif</l>
+<l>WindowInfo:=['漏光:'+Area]</l>
+<c></c>
+<l>return ()</l>
+</body>
+<docu id="Check_Sur">
+<parameters>
+<parameter id="FeatureVals"/>
+<parameter id="MessageHandle"/>
+<parameter id="PreprocessImage"/>
+<parameter id="ResultInfo"/>
+<parameter id="ShowHide"/>
+<parameter id="WindowHandle"/>
+<parameter id="WindowInfo"/>
+</parameters>
+</docu>
+</procedure>
+<procedure name="Check_Side">
+<interface>
+<io>
+<par name="Image" base_type="iconic" dimension="0"/>
+</io>
+<ic>
+<par name="ShowHide" base_type="ctrl" dimension="0"/>
+<par name="WindowHandle" base_type="ctrl" dimension="0"/>
+<par name="MessageHandle" base_type="ctrl" dimension="0"/>
+</ic>
+<oc>
+<par name="ResultInfo" base_type="ctrl" dimension="0"/>
+<par name="WindowInfo" base_type="ctrl" dimension="0"/>
+<par name="FeatureVals" base_type="ctrl" dimension="2"/>
+</oc>
+</interface>
+<body>
+<l>ResultInfo := 'OK'</l>
+<l>WindowInfo:=[]</l>
+<l>FeatureVals:={}    </l>
+<c></c>
+<l>get_image_size(Image, Width, Height)</l>
+<c></c>
+<c></c>
+<c></c>
+<c></c>
+<l>get_message_obj(GuideRect1,MessageHandle,'GuideRect1')</l>
+<l>get_message_obj(GuideRect2,MessageHandle,'GuideRect2')</l>
+<l>get_message_obj(DiameterRect1,MessageHandle,'DiameterRect1')</l>
+<l>get_message_obj(DiameterRect2,MessageHandle,'DiameterRect2')</l>
+<c></c>
+<l>get_message_tuple( MessageHandle,'resolutionratio',resolutionratio)</l>
+<l>if(ShowHide)</l>
+<l>    disp_obj(GuideRect1, WindowHandle)</l>
+<l>    disp_obj(GuideRect2, WindowHandle)</l>
+<l>    disp_obj(DiameterRect1, WindowHandle)</l>
+<l>    disp_obj(DiameterRect2, WindowHandle)</l>
+<l>endif</l>
+<l>reduce_domain(Image, DiameterRect1, ImageReduced)</l>
+<l>threshold(ImageReduced, Region1, 128, 255)</l>
+<l>reduce_domain(Image, DiameterRect2, ImageReduced)</l>
+<l>threshold(ImageReduced, Region2, 128, 255)</l>
+<l>distance_rr_min(Region1, Region2, MinDistance, Row1, Column1, Row2, Column2)</l>
+<l>if(MinDistance[0]&lt;2)</l>
+<l>    ResultInfo :='空料'</l>
+<l>    return()</l>
+<l>endif</l>
+<l>DiameterDistance:=MinDistance*resolutionratio</l>
+<l>if(ShowHide)</l>
+<l>    disp_line(WindowHandle, Row1, Column1, Row2, Column2)</l>
+<l>    disp_cross(WindowHandle, [Row1,Row2], [Column1,Column2], 56, rad(45))</l>
+<l>endif</l>
+<c></c>
+<c></c>
+<l>reduce_domain(Image, GuideRect1, ImageReduced)</l>
+<l>threshold(ImageReduced, GRegion1, 0, 128)</l>
+<l>area_center(GRegion1, GArea1, GRow1, GColumn1)</l>
+<l>reduce_domain(Image, GuideRect2, ImageReduced)</l>
+<l>threshold(ImageReduced, GRegion2, 0, 128)</l>
+<l>area_center(GRegion2, GArea2, GRow2, GColumn2)</l>
+<l>if(|GArea1|==0 or |GArea2|==0)</l>
+<l>    ResultInfo :='空料'</l>
+<l>    return()</l>
+<l>elseif(sum(GArea1)&lt;2 or sum(GArea2)&lt;2)</l>
+<l>    ResultInfo :='空料'</l>
+<l>    return()</l>
+<l>endif</l>
+<l>distance_pp(GRow1, GColumn1, GRow2, GColumn2, GDistance)</l>
+<l>if(GDistance==0)</l>
+<l>    ResultInfo :='空料'</l>
+<l>    return()</l>
+<l>endif</l>
+<l>GuideDistance:=GDistance*resolutionratio</l>
+<l>if(ShowHide)</l>
+<l>    disp_line(WindowHandle, GRow1, GColumn1, GRow2, GColumn2)</l>
+<l>    disp_cross(WindowHandle, [GRow1,GRow2], [GColumn1,GColumn2], 56, rad(45))</l>
+<l>endif</l>
+<l>get_message_tuple( MessageHandle,'GuidepinMinMax',GuidepinMinMax)</l>
+<l>get_message_tuple( MessageHandle,'DiameterMinMax',DiameterMinMax)</l>
+<l>WindowInfo:=[WindowInfo,'直径:'+DiameterDistance+'['+ DiameterMinMax[0]+','+ DiameterMinMax[1]+']']</l>
+<l>WindowInfo:=[WindowInfo,'导针间距:'+GuideDistance+'['+ GuidepinMinMax[0]+','+ GuidepinMinMax[1]+']']</l>
+<c></c>
+<l>if(DiameterMinMax[0]&lt;DiameterDistance and DiameterMinMax[1]&gt;DiameterDistance)</l>
+<c></c>
+<l>else</l>
+<l>    ResultInfo := 'NG'</l>
+<l>    return()</l>
+<l>endif</l>
+<l>if(GuidepinMinMax[0]&lt;GuideDistance and GuidepinMinMax[1]&gt;GuideDistance)</l>
+<c>     </c>
+<l>else</l>
+<l>    ResultInfo:='NG'</l>
+<l>    return()</l>
+<l>endif</l>
+<c></c>
+<l>if(ResultInfo=='OK' or ResultInfo=='')</l>
+<c>    *导针分割线R</c>
+<c></c>
+<l>get_message_tuple(MessageHandle, 'GuideCutOffRuleR', GuideCutOffRuleR)</l>
+<l>* gen_rectangle1(Rectangle, GuideCutOffRuleR-20, GColumn2, GuideCutOffRuleR+20, GColumn2)</l>
+<l>threshold (Image, Regions, 255, 255)</l>
+<l>connection(Regions, ConnectedRegions)</l>
+<l>select_shape (ConnectedRegions, SelectedRegions, 'column2', 'and', GColumn1, Width)</l>
+<l>select_shape_std(SelectedRegions, SelectedRegions1, 'max_area', 100)</l>
+<l>smallest_rectangle1(SelectedRegions1, Row11, Column11, Row21, Column21)</l>
+<c></c>
+<l>gen_rectangle1(Rectangle1, Row1, Column11-10, GuideCutOffRuleR, Column21-20)</l>
+<l>gen_rectangle1(Rectangle2, GuideCutOffRuleR, Column11-10, Row2, Column21-20)</l>
+<l>reduce_domain(Image, Rectangle1, ImageReduced1)</l>
+<l>reduce_domain(Image, Rectangle2, ImageReduced2)</l>
+<l>threshold(ImageReduced1, Region1, 0, 160)</l>
+<l>threshold(ImageReduced2, Region2, 0, 160)</l>
+<l>smallest_rectangle1(Region1, Row12, Column12, Row22, Column22)</l>
+<l>smallest_rectangle1(Region2, Row13, Column13, Row23, Column23)</l>
+<c></c>
+<l>chaval:=abs(Column22-Column23)*resolutionratio</l>
+<c></c>
+<l>get_message_tuple(MessageHandle, 'GuidepinHeightoffset', GuidepinHeightoffset)</l>
+<l>WindowInfo:=[WindowInfo,'导针高度差:'+chaval+'['+GuidepinHeightoffset+']']</l>
+<l>if(chaval&gt;GuidepinHeightoffset)</l>
+<l>    ResultInfo:='NG'</l>
+<l>endif</l>
+<l>endif</l>
+<c></c>
+<c></c>
+<c></c>
+<l>ResultInfo:='OK'</l>
+<c></c>
+<c></c>
+<c></c>
+<c></c>
+<c></c>
+<c></c>
+<c></c>
+<c></c>
+<c></c>
+<c></c>
+<c></c>
+<c></c>
+<c></c>
+<c></c>
+<c></c>
+<c></c>
+<c></c>
+<c></c>
+<c></c>
+<c></c>
+<c></c>
+<l>return ()</l>
+</body>
+<docu id="Check_Side">
+<parameters>
+<parameter id="FeatureVals"/>
+<parameter id="Image"/>
+<parameter id="MessageHandle"/>
+<parameter id="ResultInfo"/>
+<parameter id="ShowHide"/>
+<parameter id="WindowHandle"/>
+<parameter id="WindowInfo"/>
+</parameters>
+</docu>
+</procedure>
+<procedure name="MeatureP">
+<interface>
+<io>
+<par name="Image" base_type="iconic" dimension="0"/>
+</io>
+<ic>
+<par name="DiameterTmpCtrl" base_type="ctrl" dimension="0"/>
+<par name="Width" base_type="ctrl" dimension="0"/>
+<par name="Height" base_type="ctrl" dimension="0"/>
+<par name="AmplitudeThreshold" base_type="ctrl" dimension="0"/>
+<par name="Trainsition" base_type="ctrl" dimension="0"/>
+</ic>
+<oc>
+<par name="Row" base_type="ctrl" dimension="0"/>
+<par name="Column" base_type="ctrl" dimension="0"/>
+<par name="Amplitude" base_type="ctrl" dimension="0"/>
+<par name="Distance" base_type="ctrl" dimension="0"/>
+</oc>
+</interface>
+<body>
+<l>gen_measure_rectangle2 (DiameterTmpCtrl[0], DiameterTmpCtrl[1], DiameterTmpCtrl[2], DiameterTmpCtrl[3], DiameterTmpCtrl[4], Width, Height, 'nearest_neighbor', MsrHandle_Measure_01_0)</l>
+<l>measure_pos (Image, MsrHandle_Measure_01_0, 1, AmplitudeThreshold, Trainsition, 'all', Row, Column, Amplitude, Distance)</l>
+<l>close_measure (MsrHandle_Measure_01_0)</l>
+<l>return ()</l>
+</body>
+<docu id="MeatureP">
+<parameters>
+<parameter id="Amplitude"/>
+<parameter id="AmplitudeThreshold"/>
+<parameter id="Column"/>
+<parameter id="DiameterTmpCtrl"/>
+<parameter id="Distance"/>
+<parameter id="Height"/>
+<parameter id="Image"/>
+<parameter id="Row"/>
+<parameter id="Trainsition"/>
+<parameter id="Width"/>
+</parameters>
+</docu>
+</procedure>
+<procedure name="Check_EinsFeatureExtract">
+<interface>
+<io>
+<par name="Image" base_type="iconic" dimension="0"/>
+</io>
+<ic>
+<par name="ShowHide" base_type="ctrl" dimension="0"/>
+<par name="WindowHandle" base_type="ctrl" dimension="0"/>
+<par name="MessageHandle" base_type="ctrl" dimension="0"/>
+</ic>
+<oc>
+<par name="ResultInfo" base_type="ctrl" dimension="0"/>
+<par name="WindowInfo" base_type="ctrl" dimension="0"/>
+<par name="FeatureVals" base_type="ctrl" dimension="2"/>
+</oc>
+</interface>
+<body>
+<l>ResultInfo := 'OK'</l>
+<l>WindowInfo:=[]</l>
+<l>FeatureVals:={}    </l>
+<c></c>
+<c>*增加划定ROI区域</c>
+<c>*结果信息</c>
+<c></c>
+<l>get_image_size(Image,Width, Height)</l>
+<c>*初始化发送的角度为0</c>
+<l>set_message_tuple( MessageHandle,'Result_Angle',0)</l>
+<c></c>
+<c></c>
+<l>get_message_tuple( MessageHandle,'thresholdval',thresholdval)</l>
+<l>get_message_tuple( MessageHandle,'erosion_dilation',erosion_dilation)</l>
+<c></c>
+<c></c>
+<c>*'产品中心'</c>
+<l>get_message_tuple(MessageHandle, 'ProductCentre', ProductCentre)</l>
+<l>get_message_obj(EmptyRegion,MessageHandle, 'EmptyRegion')</l>
+<c>*判断是否空料的区域</c>
+<l>get_message_obj(EmptyRegion,MessageHandle, 'EmptyRegion')</l>
+<l>get_message_tuple(MessageHandle, 'EmptyRegionVals', EmptyRegionVals)</l>
+<l>reduce_domain(Image, EmptyRegion, ImageReduced1)</l>
+<l>threshold(ImageReduced1, Region, 0, 230)</l>
+<l>count_obj(Region, Number)</l>
+<l>if(Number&gt;=1)</l>
+<l>    area_center(Region, Area, Row6, Column1)</l>
+<l>    if(Area&lt;200)</l>
+<l>        ResultInfo := '空料'</l>
+<l>        return()</l>
+<l>    endif</l>
+<l>endif</l>
+<c>*获取有效检测区域</c>
+<l>get_message_obj(CheckRegion,MessageHandle, 'CheckRegion')</l>
+<l>get_message_tuple(MessageHandle, 'CheckRegionVals', CheckRegionVals)</l>
+<l>auto_threshold(Image, Regions, 2)</l>
+<l>connection(Regions, ConnectedRegions)</l>
+<l>erosion_circle(ConnectedRegions, RegionErosion, 3.5)</l>
+<l>connection(RegionErosion, ConnectedRegions)</l>
+<l>select_shape (ConnectedRegions, SelectedRegions, ['row1','column1','row2','column2'], 'and', [CheckRegionVals[0],CheckRegionVals[1],CheckRegionVals[0],CheckRegionVals[1]], [CheckRegionVals[2],CheckRegionVals[3],CheckRegionVals[2],CheckRegionVals[3]])</l>
+<l>union1(SelectedRegions, RegionUnion)</l>
+<l>fill_up(RegionUnion, RegionUnion)</l>
+<l>closing_circle(RegionUnion, RegionClosing, 100)</l>
+<l>opening_circle(RegionClosing, RegionOpening, 200)</l>
+<l>gen_contour_region_xld(RegionOpening, Contours, 'border')</l>
+<l>fit_circle_contour_xld(Contours, 'algebraic', -1, 0, 0, 3, 2, Row, Column, Radius, StartPhi, EndPhi, PointOrder)</l>
+<l>gen_circle(RegionClosing, Row, Column, Radius)</l>
+<c></c>
+<l>if(ShowHide)</l>
+<l>    disp_cross(WindowHandle, Row, Column, 56, rad(45))</l>
+<l>endif</l>
+<c></c>
+<l>gen_region_points(RegionCentrePoint, Row, Column)</l>
+<l>gen_circle(Circle, Row, Column, Radius-60)</l>
+<c></c>
+<l>reduce_domain(Image, Circle, ImageReduced)</l>
+<c></c>
+<l>mean_image(ImageReduced, ImageMean, 29, 29)</l>
+<l>auto_threshold(ImageMean, Regions1, 2)</l>
+<l>connection(Regions1, ConnectedRegions4)</l>
+<l>select_shape_std(ConnectedRegions4, SelectedRegions3, 'max_area', 100)</l>
+<l>fill_up(SelectedRegions3, RegionFillUp)</l>
+<l>erosion_circle(SelectedRegions3, RegionErosion2, 20)</l>
+<l>dilation_circle(RegionErosion2, RegionDilation2, 20)</l>
+<l>smallest_circle(RegionDilation2, Row3, Column3, Radius1)</l>
+<l>gen_circle(Circle1, Row3, Column3, Radius1+5)</l>
+<l>difference(ConnectedRegions4, Circle1, RingRegion)</l>
+<l>connection(RingRegion, ConnectedRegions5)</l>
+<l>select_shape_std(ConnectedRegions5, SelectedRegions4, 'max_area', 100)</l>
+<l>dilation_circle(SelectedRegions4, RegionDilation3, 20)</l>
+<l>erosion_circle(ConnectedRegions5, RegionErosion4, 3.5)</l>
+<l>connection(RegionErosion4, ConnectedRegions7)</l>
+<l>difference(ConnectedRegions7, RegionDilation3, RegionDifference1)</l>
+<c></c>
+<l>dyn_threshold(ImageReduced, ImageMean, RegionDynThresh1, 20, 'light')</l>
+<l>connection(RegionDynThresh1, ConnectedRegions3)</l>
+<l>area_center(ConnectedRegions3, Area1, Row4, Column4)</l>
+<c></c>
+<l>soldereddotRowA:=[]</l>
+<l>soldereddotColumnA:=[]</l>
+<l>soldereddotRowB:=[]</l>
+<l>soldereddotColumnB:=[]</l>
+<l>angle:=[]</l>
+<l>degAngleA:=-1</l>
+<l>degAngleB:=-1</l>
+<l>if(|Area1|&gt;=2)</l>
+<l>    select_shape_std(ConnectedRegions3, SelectedRegionsA, 'max_area', 100)</l>
+<l>    smallest_rectangle2(SelectedRegionsA, RowA, ColumnA, PhiA, LengthA1, LengthA2)</l>
+<l>    if(abs(LengthA1-LengthA2)&gt;20)</l>
+<l>        if(LengthA1&gt;LengthA2)</l>
+<l>            gen_rectangle2(Rectangle1, RowA, ColumnA, PhiA, LengthA1+Width, 50)</l>
+<l>            gen_rectangle2(RectangleA1, RowA, ColumnA, PhiA, LengthA1+Width, 1)</l>
+<l>        else</l>
+<l>            gen_rectangle2(Rectangle1, RowA, ColumnA, PhiA, 50, LengthA2+Width)</l>
+<l>            gen_rectangle2(RectangleA1, RowA, ColumnA, PhiA, 1, LengthA2+Width)</l>
+<l>        endif</l>
+<l>        distance_rr_min(RegionCentrePoint, RectangleA1, MinDistance, Row11, Column11, soldereddotRowA, soldereddotColumnA)</l>
+<l>        difference(ConnectedRegions3, Rectangle1, RegionDifference)</l>
+<l>        select_shape_std(RegionDifference, SelectedRegionsB, 'max_area', 100)</l>
+<l>        smallest_rectangle2(SelectedRegionsB, RowB, ColumnB, PhiB, LengthB1, LengthB2)</l>
+<l>        if(LengthB1&gt;LengthB2)</l>
+<l>            gen_rectangle2(RectangleB1, RowB, ColumnB, PhiB, LengthB1+Width, 1)</l>
+<l>        else</l>
+<l>            gen_rectangle2(RectangleB1, RowB, ColumnB, PhiB, 1, LengthB2+Width)</l>
+<l>        endif</l>
+<l>        distance_rr_min(RegionCentrePoint, RectangleB1, MinDistance, Row11, Column11, soldereddotRowB, soldereddotColumnB)</l>
+<c>      </c>
+<c></c>
+<l>        union2(RectangleA1, RectangleB1,RegionUnion)</l>
+<c></c>
+<l>        dilation_circle(RegionUnion, RegionDilation4, 50)</l>
+<l>        difference(RegionDifference1, RegionDilation4, RegionDifference2)</l>
+<l>        union1(RegionDifference2, RegionUnion1)</l>
+<l>        area_center(RegionUnion1, Area2, Row2, Column2)</l>
+<l>        if(|Area2|==0 or Area2[0]==0)</l>
+<l>            ResultInfo :='无焊点'</l>
+<l>            return()</l>
+<l>        endif</l>
+<l>        angle_ll(0, 0, 100, 0, soldereddotRowA, soldereddotColumnA, RowA, ColumnA, AngleA)</l>
+<l>        angle_ll(0, 0, 100, 0, soldereddotRowB, soldereddotColumnB, RowB, ColumnB, AngleB)</l>
+<l>        angle_ll(soldereddotRowA, soldereddotColumnA, RowA, ColumnA, soldereddotRowB, soldereddotColumnB, RowB, ColumnB, AngleAB)</l>
+<l>        if(AngleA&lt;0)</l>
+<l>             degAngleA:=-(deg(AngleA))</l>
+<l>        else</l>
+<l>             degAngleA:=360-(deg(AngleA))</l>
+<l>        endif</l>
+<l>        if(AngleB&lt;0)</l>
+<l>            degAngleB:=-(deg(AngleB))</l>
+<l>        else</l>
+<l>            degAngleB:=360-(deg(AngleB))</l>
+<l>        endif</l>
+<l>        degAngleAB:=abs(deg(AngleAB))</l>
+<l>        WindowInfo:=[WindowInfo,'针脚夹角差:'+degAngleAB+','+degAngleA+','+degAngleB]</l>
+<c>    </c>
+<l>        if(ShowHide)</l>
+<l>            disp_cross(WindowHandle, [RowA,RowB], [ColumnA,ColumnB], 56, rad(45))</l>
+<l>        endif</l>
+<l>        distance_pr(RegionUnion1, soldereddotRowA, soldereddotColumnA, DistanceMinA, DistanceMaxA)</l>
+<l>        distance_pr(RegionUnion1, soldereddotRowB, soldereddotColumnB, DistanceMinB, DistanceMaxB)</l>
+<l>        if(DistanceMinA&gt;DistanceMinB)</l>
+<l>            soldereddotRow:=soldereddotRowA</l>
+<l>            soldereddotColumn:=soldereddotColumnA</l>
+<l>            soldereddotRowA:=soldereddotRowB</l>
+<l>            soldereddotColumnA:=soldereddotColumnB</l>
+<l>            soldereddotRowB:=soldereddotRow</l>
+<l>            soldereddotColumnB:=soldereddotColumn</l>
+<l>        endif</l>
+<c></c>
+<l>    else</l>
+<l>        dilation_circle (SelectedRegionsA, RegionErosion3, 120)</l>
+<l>        difference(ConnectedRegions3, RegionErosion3, RegionDifference3)</l>
+<l>        connection(RegionDifference3, ConnectedRegions6)</l>
+<l>        select_shape_std(ConnectedRegions6, SelectedRegionsB, 'max_area', 100)</l>
+<l>        area_center(SelectedRegionsA, AreaA, soldereddotRowA, soldereddotColumnA)</l>
+<l>        area_center(SelectedRegionsB, AreaB, soldereddotRowB, soldereddotColumnB)</l>
+<l>        if(|soldereddotRowA|&gt;0 and |soldereddotRowB|&gt;0)</l>
+<l>            union1(RegionDifference1, RegionUnion1)</l>
+<l>            distance_pr(RegionUnion1, soldereddotRowA, soldereddotColumnA, DistanceMinA, DistanceMaxA)</l>
+<l>            distance_pr(RegionUnion1, soldereddotRowB, soldereddotColumnB, DistanceMinB, DistanceMaxB)</l>
+<l>            if(DistanceMinA&gt;DistanceMinB)</l>
+<l>                soldereddotRow:=soldereddotRowA</l>
+<l>                soldereddotColumn:=soldereddotColumnA</l>
+<l>                soldereddotRowA:=soldereddotRowB</l>
+<l>                soldereddotColumnA:=soldereddotColumnB</l>
+<l>                soldereddotRowB:=soldereddotRow</l>
+<l>                soldereddotColumnB:=soldereddotColumn</l>
+<l>            endif  </l>
+<l>        endif</l>
+<l>    endif</l>
+<l>endif</l>
+<c></c>
+<c>    </c>
+<l>if(|soldereddotRowA|&gt;0 and |soldereddotRowB|&gt;0)</l>
+<l>    if(soldereddotRowA[0]!=soldereddotRowB[0] or soldereddotColumnA[0]!=soldereddotColumnB[0] )</l>
+<c>        </c>
+<l>        angle_ll(Row, Column, soldereddotRowA, soldereddotColumnA, Row, Column, soldereddotRowB, soldereddotColumnB, dotAngle)</l>
+<l>        degdotAngle:=abs(abs((int(deg(dotAngle)))%180)-180)</l>
+<c></c>
+<c></c>
+<l>        if(ShowHide)</l>
+<l>        disp_cross(WindowHandle, [soldereddotRowA[0],soldereddotRowB[0]], [soldereddotColumnA[0],soldereddotColumnB[0]], 56, rad(45))</l>
+<c></c>
+<l>        endif</l>
+<l>        WindowInfo:=[WindowInfo,'导针夹角:'+degdotAngle] </l>
+<l>        if(degdotAngle&gt;30)</l>
+<l>            ResultInfo :='导针夹角异常'</l>
+<l>            return()</l>
+<l>        endif</l>
+<c></c>
+<l>        if(degAngleA&gt;=0)</l>
+<l>            Angle:=degAngleA</l>
+<l>        else</l>
+<l>            angle_ll(soldereddotRowA, soldereddotColumnA, soldereddotRowA, soldereddotColumnA-200, soldereddotRowA, soldereddotColumnA, soldereddotRowB, soldereddotColumnB, soldereddotAngle)</l>
+<l>            if(soldereddotAngle&lt;0)</l>
+<l>                Angle:=-(deg(soldereddotAngle))</l>
+<l>            else</l>
+<l>                Angle:=360-(deg(soldereddotAngle))</l>
+<l>            endif</l>
+<l>        endif</l>
+<l>        Angle:=int(Angle*100)</l>
+<l>*       outVectorInfos.insert(outVectorInfos.length(),['角度',Angle]) </l>
+<l>        WindowInfo:=[WindowInfo,'导针角度:'+Angle] </l>
+<l>        set_message_tuple( MessageHandle,'Result_Angle',Angle)</l>
+<l>*       outVectorInfos.insert(outVectorInfos.length(),['焊点坐标',soldereddotRowA, soldereddotColumnA,soldereddotRowB, soldereddotColumnB])</l>
+<l>        WindowInfo:=[WindowInfo,'焊点坐标['+soldereddotRowA+','+soldereddotColumnA+','+soldereddotRowB+','+ soldereddotColumnB+']'] </l>
+<c>        </c>
+<l>        ImageInfoval:=[soldereddotRowA, soldereddotColumnA, soldereddotRowB, soldereddotColumnB]</l>
+<l>        Py_Memory_Check (Image, ImageResult, MessageHandle, WindowHandle, ShowHide, Width, Height, ImageInfoval, PyResultVal)</l>
+<l>        GetPyFeature (ImageResult, MessageHandle, ShowHide, WindowHandle, PyResultVal, PyResultInfo, PyWindowInfo, PyFeatureVals)</l>
+<l>        ResultInfo:=PyResultInfo</l>
+<l>        WindowInfo:=[WindowInfo,PyWindowInfo]</l>
+<l>         FeatureVals:=PyFeatureVals</l>
+<c></c>
+<l>    else</l>
+<l>        ResultInfo :='无焊点'</l>
+<l>    endif</l>
+<c>   </c>
+<l>else</l>
+<l>    ResultInfo :='无焊点'</l>
+<l>endif</l>
+<c></c>
+<l>return ()</l>
+</body>
+<docu id="Check_EinsFeatureExtract">
+<parameters>
+<parameter id="FeatureVals"/>
+<parameter id="Image"/>
+<parameter id="MessageHandle"/>
+<parameter id="ResultInfo"/>
+<parameter id="ShowHide"/>
+<parameter id="WindowHandle"/>
+<parameter id="WindowInfo"/>
+</parameters>
+</docu>
+</procedure>
+<procedure name="Check_OCR">
+<interface>
+<io>
+<par name="Image" base_type="iconic" dimension="0"/>
+</io>
+<ic>
+<par name="ShowHide" base_type="ctrl" dimension="0"/>
+<par name="WindowHandle" base_type="ctrl" dimension="0"/>
+<par name="MessageHandle" base_type="ctrl" dimension="0"/>
+</ic>
+<oc>
+<par name="ResultInfo" base_type="ctrl" dimension="0"/>
+<par name="WindowInfo" base_type="ctrl" dimension="0"/>
+<par name="FeatureVals" base_type="ctrl" dimension="2"/>
+</oc>
+</interface>
+<body>
+<l>ResultInfo := 'OK'</l>
+<l>WindowInfo:=[]</l>
+<l>FeatureVals:={}    </l>
+<c></c>
+<c></c>
+<l>get_image_size (Image, Width, Height)</l>
+<l>get_message_tuple(MessageHandle, 'PosRowMax', PosRowMax)</l>
+<l>get_message_tuple(MessageHandle, 'PosRowMin', PosRowMin)</l>
+<l>gen_rectangle1(PreprocessingRegion, PosRowMin, 0, PosRowMax, Width)</l>
+<c></c>
+<l>if(ShowHide)</l>
+<l>    disp_obj(PreprocessingRegion, WindowHandle)</l>
+<l>endif</l>
+<l>reduce_domain(Image, PreprocessingRegion, ImageReduced)</l>
+<l>get_message_tuple(MessageHandle, 'ImageAdd', ImageAdd)</l>
+<l>crop_domain(ImageReduced, ImagePart)</l>
+<c></c>
+<c></c>
+<l>add_image(ImageReduced, ImageReduced, Image, ImageAdd, 0)</l>
+<c></c>
+<l>get_message_tuple( MessageHandle,'OCRSigns',OCRSigns)</l>
+<c></c>
+<l>get_image_size(ImagePart, Width1, Height1)</l>
+<l>PyImageInfo:=[int(PosRowMin),0,int(PosRowMax),int(Width)]</l>
+<c></c>
+<l>par_start&lt;PyThreadID&gt; : Py_Memory_Check (ImagePart, ImageResult, MessageHandle, WindowHandle, ShowHide, Width1, Height1, PyImageInfo, PyResultVal)</l>
+<c></c>
+<l>OCR_Find (ImageReduced, Image, ShowHide, WindowHandle, MessageHandle, OCRSigns[0], Width, Height, isFindOCR1, OcrWindowInfo1)</l>
+<l>OCR_Find (ImageReduced, Image, ShowHide, WindowHandle, MessageHandle, OCRSigns[1], Width, Height, isFindOCR2, OcrWindowInfo2)</l>
+<c></c>
+<l>* par_join([PyThreadID,OCRThreadID1,OCRThreadID2])</l>
+<l> par_join(PyThreadID)</l>
+<l>GetPyFeature (ImageResult, MessageHandle, ShowHide, WindowHandle, PyResultVal, PyResultInfo, PyWindowInfo, PyFeatureVals)</l>
+<l>try</l>
+<l>    if(isFindOCR1==1 and isFindOCR2==1)</l>
+<l>        ResultInfo:=PyResultInfo</l>
+<l>    else</l>
+<l>        ResultInfo:='NG'</l>
+<l>    endif</l>
+<c></c>
+<l>catch (Exception)</l>
+<c></c>
+<l>    ResultInfo:='NG'</l>
+<l>endtry</l>
+<l>msg:='Ai_信息'</l>
+<l>for Index := 0 to |PyImageInfo|-1 by 1</l>
+<l>    msg:=msg+','+PyImageInfo[Index]</l>
+<l>endfor</l>
+<l>WindowInfo:= [msg,OcrWindowInfo1,OcrWindowInfo2,PyWindowInfo]</l>
+<l>FeatureVals:=PyFeatureVals</l>
+<c></c>
+<c></c>
+<c></c>
+<c></c>
+<c></c>
+<l>return ()</l>
+</body>
+<docu id="Check_OCR">
+<parameters>
+<parameter id="FeatureVals"/>
+<parameter id="Image"/>
+<parameter id="MessageHandle"/>
+<parameter id="ResultInfo"/>
+<parameter id="ShowHide"/>
+<parameter id="WindowHandle"/>
+<parameter id="WindowInfo"/>
+</parameters>
+</docu>
+</procedure>
+<procedure name="OCR_Find">
+<interface>
+<io>
+<par name="ImageReduced" base_type="iconic" dimension="0"/>
+<par name="Image" base_type="iconic" dimension="0"/>
+</io>
+<ic>
+<par name="ShowHide" base_type="ctrl" dimension="0"/>
+<par name="WindowHandle" base_type="ctrl" dimension="0"/>
+<par name="MessageHandle" base_type="ctrl" dimension="0"/>
+<par name="OCRSign" base_type="ctrl" dimension="0"/>
+<par name="Width" base_type="ctrl" dimension="0"/>
+<par name="Height" base_type="ctrl" dimension="0"/>
+</ic>
+<oc>
+<par name="isFindOCR" base_type="ctrl" dimension="0"/>
+<par name="WindowInfo" base_type="ctrl" dimension="0"/>
+</oc>
+</interface>
+<body>
+<c></c>
+<l>WindowInfo:=[]</l>
+<l>get_message_tuple(MessageHandle,OCRSign+'_val',OCRVal)</l>
+<l>get_message_tuple(MessageHandle,OCRSign+'_shmdfm',shmdfm)</l>
+<c></c>
+<c></c>
+<c></c>
+<l>isFindOCR:=false</l>
+<l>if(shmdfm=='dfm')</l>
+<c>    </c>
+<l>    get_message_tuple(MessageHandle, OCRSign+'_dfmModelId', ModelId)</l>
+<l>    get_deformable_model_contours (ModelContours, ModelId, 1)</l>
+<c></c>
+<l>    find_planar_uncalib_deformable_model (ImageReduced, ModelId, rad(0), rad(360), 1, 1, 1, 1, 0.5, 10, 0.5, 4, 0.75, ['subpixel'], ['least_squares_very_high'], ResultHomMat, ModelScore)</l>
+<l>   tuple_strlen(OCRSign,lenOCRSignstr)</l>
+<l>    tuple_strlen(OCRVal,lenOCRValstr)</l>
+<c>   * Matching 02: transform the model contours into the detected positions</c>
+<l>    for MatchingObjIdx := 0 to |ModelScore| - 1 by 1</l>
+<l>        _TempHomMat2D := ResultHomMat[MatchingObjIdx*9:MatchingObjIdx*9+8]</l>
+<l>        projective_trans_contour_xld (ModelContours, TransContours, _TempHomMat2D)</l>
+<l>        gen_region_contour_xld(TransContours, Region, 'filled')</l>
+<l>        get_message_tuple(MessageHandle, OCRSign+'_Direction', OCRDirection)</l>
+<l>        union1(Region, RegionUnion)</l>
+<l>        smallest_rectangle1(RegionUnion, Row11, Column11, Row22, Column22)</l>
+<l>        get_message_tuple(MessageHandle, OCRSign+'OcrHandle', OcrHandle)</l>
+<l>        get_message_tuple(MessageHandle, OCRSign+'TextModel', TextModel)</l>
+<l>        if(OCRDirection==0)</l>
+<l>           L:=Column22-Column11</l>
+<l>           h:=Row22-Row11</l>
+<l>           LL:=L/lenOCRSignstr+12</l>
+<l>           gen_rectangle1(Rectangle2, Row11-5, Column11-lenOCRValstr*LL, Row22+5, Column22+5)</l>
+<l>           Show_Hide(Rectangle2, 1, WindowHandle)</l>
+<l>           reduce_domain(Image, Rectangle2, ImageReduced1)</l>
+<l>           crop_domain(ImageReduced1, ImagePart)</l>
+<l>           get_image_size(ImagePart, Width, Height)</l>
+<l>           gen_rectangle1(Rectangle2, 0, 0, Height, Width)</l>
+<l>           GetOCRChrs (ImagePart, Rectangle2, TextModel, OcrHandle, OCRChrs, OCRChrsConfidences)</l>
+<l>        elseif(OCRDirection==90)</l>
+<l>           h:=Column22-Column11</l>
+<l>           L:=Row22-Row11</l>
+<l>            LL:=L/lenOCRSignstr+12</l>
+<l>           gen_rectangle1(Rectangle2, Row11, Column11-5, Row22+lenOCRValstr*LL, Column22+5)</l>
+<l>           Show_Hide(Rectangle2, 1, WindowHandle)</l>
+<l>           reduce_domain(Image, Rectangle2, ImageReduced1)</l>
+<l>           crop_domain(ImageReduced1, ImagePart)</l>
+<l>           rotate_image(ImagePart, ImageRotate1, -90, 'constant')</l>
+<l>           get_image_size(ImageRotate1, Width, Height)</l>
+<l>           gen_rectangle1(Rectangle2, 0, 0, Height, Width)</l>
+<l>           GetOCRChrs (ImageRotate1, Rectangle2, TextModel, OcrHandle, OCRChrs, OCRChrsConfidences)</l>
+<c></c>
+<l>        elseif(OCRDirection==180)</l>
+<c></c>
+<l>           L:=Column22-Column11</l>
+<l>           h:=Row22-Row11</l>
+<l>            LL:=L/lenOCRSignstr+12</l>
+<l>           gen_rectangle1(Rectangle2, Row11-5, Column11, Row22+5, Column22+lenOCRValstr*LL)</l>
+<l>           Show_Hide(Rectangle2, 1, WindowHandle)</l>
+<l>           reduce_domain(Image, Rectangle2, ImageReduced1)</l>
+<l>           crop_domain(ImageReduced1, ImagePart)</l>
+<l>           rotate_image(ImagePart, ImageRotate1, -180, 'constant')</l>
+<l>           get_image_size(ImageRotate1, Width, Height)</l>
+<l>           gen_rectangle1(Rectangle2, 0, 0, Height, Width)</l>
+<l>           GetOCRChrs (ImageRotate1, Rectangle2, TextModel, OcrHandle, OCRChrs, OCRChrsConfidences)</l>
+<c>           </c>
+<l>        elseif(OCRDirection==270)</l>
+<l>           h:=Column22-Column11</l>
+<l>           L:=Row22-Row11</l>
+<l>            LL:=L/lenOCRSignstr+12</l>
+<l>           gen_rectangle1(Rectangle2, Row11-lenOCRValstr*LL, Column11-5, Row22+5, Column22+5)</l>
+<l>           Show_Hide(Rectangle2, 1, WindowHandle)</l>
+<l>           reduce_domain(Image, Rectangle2, ImageReduced1)</l>
+<l>           crop_domain(ImageReduced1, ImagePart)</l>
+<l>           rotate_image(ImagePart, ImageRotate1, -270, 'constant')</l>
+<l>           get_image_size(ImageRotate1, Width, Height)</l>
+<l>           gen_rectangle1(Rectangle2, 0, 0, Height, Width)</l>
+<l>           GetOCRChrs (ImageRotate1, Rectangle2, TextModel, OcrHandle, OCRChrs, OCRChrsConfidences)</l>
+<l>        endif</l>
+<l>       if(|OCRChrs|&gt;=strlen(OCRVal))</l>
+<l>            ocrstr:=sum(OCRChrs[0:strlen(OCRVal)-1])</l>
+<l>            tuple_string(ocrstr, '#', ocrstr)</l>
+<l>            if(ocrstr==OCRVal)</l>
+<l>                isFindOCR:=true</l>
+<l>                break</l>
+<l>            endif</l>
+<l>        endif</l>
+<l>    endfor</l>
+<c>    </c>
+<c>    </c>
+<c>    </c>
+<l>elseif(shmdfm=='shm')</l>
+<c> </c>
+<l>    get_message_tuple(MessageHandle, OCRSign+'_shmModelId', ModelId)</l>
+<l>    find_shape_model (ImageReduced, ModelId, rad(0), rad(360), 0.3, 10, 0.5, 'least_squares', [5,1], 0.75, ModelRow, ModelColumn, ModelAngle, ModelScore)</l>
+<l>    get_shape_model_contours (ModelContours, ModelId, 1)</l>
+<l>    get_message_tuple(MessageHandle, OCRSign+'_shmps', shmps)</l>
+<l>    for Index2 := 0 to |ModelAngle|-1 by 1</l>
+<l>        hom_mat2d_identity (HomMat)</l>
+<l>        hom_mat2d_rotate (HomMat, ModelAngle[Index2], 0, 0, HomMat)</l>
+<l>        hom_mat2d_translate (HomMat, ModelRow[Index2], ModelColumn[Index2], HomMat)</l>
+<l>        affine_trans_contour_xld(ModelContours, ContoursAffinTrans, HomMat)</l>
+<l>        gen_region_contour_xld(ContoursAffinTrans, Region, 'filled')</l>
+<l>    endfor</l>
+<l>    degModelAngle:=int(deg(ModelAngle))</l>
+<l>    degModelAngle1:=degModelAngle%90</l>
+<l>    tuple_less_equal_elem(abs(degModelAngle1), 8, Lesseq)</l>
+<l>    tuple_find(Lesseq, 1, Indices)</l>
+<l>    if(|Indices|==0)</l>
+<l>        ResultInfo := '空料'</l>
+<l>        WindowInfo:=[WindowInfo,OCRSign+'无法识别']</l>
+<l>        return()</l>
+<l>    endif</l>
+<l>    if(Indices[0]&lt;0)</l>
+<l>        ResultInfo := '空料'</l>
+<l>        WindowInfo:=[WindowInfo,OCRSign+'无法识别']</l>
+<l>        return()</l>
+<l>    endif</l>
+<l>    degModelAngle:=degModelAngle[Indices]</l>
+<l>    ModelRow:=ModelRow[Indices]</l>
+<l>    ModelColumn:=ModelColumn[Indices]</l>
+<l>    ModelScore:=ModelScore[Indices]</l>
+<l>    ModelAngle:=ModelAngle[Indices]</l>
+<c>    </c>
+<l>    degModelAngle:=deg(ModelAngle)+180</l>
+<l>    for Index2 := 0 to |degModelAngle|-1 by 1</l>
+<l>        degAngle:=degModelAngle[Index2]</l>
+<l>        if(degAngle !=-1)</l>
+<l>            hom_mat2d_identity (HomMat)</l>
+<l>            hom_mat2d_rotate (HomMat, ModelAngle[Index2], 0, 0, HomMat)</l>
+<l>            hom_mat2d_translate (HomMat, ModelRow[Index2], ModelColumn[Index2], HomMat)</l>
+<l>            affine_trans_contour_xld(ModelContours, ContoursAffinTrans, HomMat)</l>
+<l>            gen_region_contour_xld(ContoursAffinTrans, Region, 'filled')</l>
+<l>            union1(Region, RegionUnion)</l>
+<l>            smallest_rectangle1(RegionUnion, Row1, Column1, Row21, Column21)</l>
+<l>            get_message_tuple(MessageHandle,OCRSign +'_Direction', OCRDirection)</l>
+<l>*             get_message_tuple(MessageHandle, 'OCRuFRectval', OCRuFRectval)</l>
+<l>            if(OCRDirection==0)</l>
+<l>             w:=  1.0*(Column21 - Column1)/2</l>
+<l>               h:= Row21-Row1</l>
+<l>              gen_rectangle1(Retangle1,Row1-10,Column1-3*w,Row21+10,Column1)</l>
+<c>               </c>
+<l>                gen_rectangle1(Rectangle1,1.0*(Row1+Row21)/2-1.0*h/2-3, Column1-w-3, \
+                               1.0*(Row1+Row21)/2+1.0*h/2+3, Column1-2)</l>
+<l>            endif</l>
+<c>            </c>
+<c>            </c>
+<c>            </c>
+<c>            </c>
+<l>            affine_trans_pixel(HomMat, [shmps[0],shmps[2]], [shmps[1],shmps[3]], RowTrans1, ColTrans1)</l>
+<l>             if(RowTrans1[0]&lt;RowTrans1[1] and ColTrans1[0]&lt;ColTrans1[1])</l>
+<l>                 gen_rectangle1(Rectangle, RowTrans1[0],ColTrans1[0], RowTrans1[1],ColTrans1[1])</l>
+<l>             elseif( RowTrans1[0]&lt;RowTrans1[1] and ColTrans1[0]&gt;ColTrans1[1])</l>
+<l>                 gen_rectangle1(Rectangle, RowTrans1[0],ColTrans1[1], RowTrans1[1],ColTrans1[0])</l>
+<l>                 degAngle:=degAngle+180</l>
+<l>             elseif( RowTrans1[0]&gt;RowTrans1[1] and ColTrans1[0]&lt;ColTrans1[1])</l>
+<l>                 gen_rectangle1(Rectangle, RowTrans1[1],ColTrans1[0], RowTrans1[0],ColTrans1[1])</l>
+<l>                 degAngle:=degAngle+180</l>
+<l>             elseif( RowTrans1[0]&gt;RowTrans1[1] and ColTrans1[0]&gt;ColTrans1[1])</l>
+<l>                 gen_rectangle1(Rectangle, RowTrans1[1],ColTrans1[1], RowTrans1[0],ColTrans1[0])</l>
+<l>             endif</l>
+<l>            area_center (Image, Area, Row, Column)</l>
+<l>            rotate_image(Image, ImageRotate, degAngle+180, 'constant')</l>
+<l>            area_center (ImageRotate, Area2, Row2, Column2)</l>
+<l>            hom_mat2d_identity (HomMat2DIdentity)</l>
+<l>            hom_mat2d_rotate (HomMat2DIdentity, rad(degAngle+180), Row, Column, HomMat2DRotate)</l>
+<l>            hom_mat2d_translate (HomMat2DRotate,Row2 - Row, Column2 - Column, HomMat2DTranslate)</l>
+<l>            affine_trans_region (Rectangle, RegionAffineTrans, HomMat2DTranslate, 'constant')</l>
+<l>            get_message_tuple(MessageHandle, OCRSign+'OcrHandle', OcrHandle)</l>
+<l>            get_message_tuple(MessageHandle, OCRSign+'TextModel', TextModel)</l>
+<l>            GetOCRChrs (ImageRotate, RegionAffineTrans, TextModel, OcrHandle, OCRChrs, OCRChrsConfidences)</l>
+<l>            if(|OCRChrs|&gt;=strlen(OCRVal))</l>
+<l>                ocrstruF:=sum(OCRChrs[0:strlen(OCRVal)-1])</l>
+<l>                tuple_string(ocrstruF, '#', ocrstruF)</l>
+<l>                if(ocrstruF==OCRVal)</l>
+<l>                    isFindOCR:=true</l>
+<l>                    break</l>
+<l>                endif</l>
+<l>            endif</l>
+<l>        endif</l>
+<l>    endfor</l>
+<c>    </c>
+<c>    </c>
+<c>    </c>
+<l>endif</l>
+<l>get_message_tuple(MessageHandle,OCRSign+'_ResultUse',OCRResultUse)</l>
+<l>if(isFindOCR)</l>
+<l>    WindowInfo:=[WindowInfo,OCRSign+'['+OCRVal+']'+'被识别']</l>
+<l>else</l>
+<l>    WindowInfo:=[WindowInfo,OCRSign+'['+OCRVal+']'+'未识别']</l>
+<l>endif</l>
+<l>if(OCRResultUse!=1)</l>
+<l>    isFindOCR:=true</l>
+<l>    WindowInfo:=[WindowInfo,OCRSign+'['+OCRVal+']'+'结果禁用']</l>
+<l>endif</l>
+<c></c>
+<c></c>
+<c></c>
+<c></c>
+<c></c>
+<c></c>
+<l>return ()</l>
+</body>
+<docu id="OCR_Find">
+<parameters>
+<parameter id="Height"/>
+<parameter id="Image"/>
+<parameter id="ImageReduced"/>
+<parameter id="MessageHandle"/>
+<parameter id="OCRSign"/>
+<parameter id="ShowHide"/>
+<parameter id="Width"/>
+<parameter id="WindowHandle"/>
+<parameter id="WindowInfo"/>
+<parameter id="isFindOCR">
+<sem_type>integer</sem_type>
+</parameter>
+</parameters>
+</docu>
+</procedure>
+<procedure name="load_config_split">
+<interface>
+<ic>
+<par name="inifile" base_type="ctrl" dimension="0"/>
+<par name="Section" base_type="ctrl" dimension="0"/>
+<par name="keyname" base_type="ctrl" dimension="0"/>
+<par name="defaultval" base_type="ctrl" dimension="0"/>
+<par name="splitstr" base_type="ctrl" dimension="0"/>
+</ic>
+<oc>
+<par name="val" base_type="ctrl" dimension="0"/>
+</oc>
+</interface>
+<body>
+<l>load_config(inifile, Section, keyname, defaultval, val)</l>
+<l>tuple_split(val, splitstr, val)</l>
+<l>tuple_string(val, '#', val)</l>
+<l>return ()</l>
+</body>
+<docu id="load_config_split">
+<parameters>
+<parameter id="Section"/>
+<parameter id="defaultval"/>
+<parameter id="inifile"/>
+<parameter id="keyname"/>
+<parameter id="splitstr"/>
+<parameter id="val"/>
+</parameters>
+</docu>
+</procedure>
+<procedure name="load_config_split_numeber">
+<interface>
+<ic>
+<par name="inifile" base_type="ctrl" dimension="0"/>
+<par name="Section" base_type="ctrl" dimension="0"/>
+<par name="keyname" base_type="ctrl" dimension="0"/>
+<par name="defaultval" base_type="ctrl" dimension="0"/>
+<par name="splitstr" base_type="ctrl" dimension="0"/>
+</ic>
+<oc>
+<par name="val" base_type="ctrl" dimension="0"/>
+</oc>
+</interface>
+<body>
+<l>load_config_split (inifile, Section, keyname, defaultval, splitstr, val)</l>
+<l>tuple_number(val, val)</l>
+<l>return ()</l>
+</body>
+<docu id="load_config_split_numeber">
+<parameters>
+<parameter id="Section"/>
+<parameter id="defaultval"/>
+<parameter id="inifile"/>
+<parameter id="keyname"/>
+<parameter id="splitstr"/>
+<parameter id="val"/>
+</parameters>
+</docu>
+</procedure>
+<procedure name="GetOCRChrs">
+<interface>
+<io>
+<par name="TmpObj_Mono" base_type="iconic" dimension="0"/>
+<par name="ROI_OCR_uF" base_type="iconic" dimension="0"/>
+</io>
+<ic>
+<par name="TextModel" base_type="ctrl" dimension="0"/>
+<par name="OcrHandle" base_type="ctrl" dimension="0"/>
+</ic>
+<oc>
+<par name="OCRChrs" base_type="ctrl" dimension="0"/>
+<par name="OCRChrsConfidences" base_type="ctrl" dimension="0"/>
+</oc>
+</interface>
+<body>
+<l>reduce_domain (TmpObj_Mono, ROI_OCR_uF, TmpObj_MonoReduced_OCR_02_0)</l>
+<l>hom_mat2d_identity (TmpCtrl_MatrixIdentity)</l>
+<l>get_domain (TmpObj_MonoReduced_OCR_02_0, TmpObj_Domain)</l>
+<l>get_system ('clip_region', TmpCtrl_ClipRegion)</l>
+<l>set_system ('clip_region', 'false')</l>
+<l>dilation_circle (TmpObj_Domain, TmpObj_DomainExpanded, 45)</l>
+<l>affine_trans_region (TmpObj_DomainExpanded, TmpObj_DomainTransformedRaw, TmpCtrl_MatrixIdentity, 'true')</l>
+<l>smallest_rectangle1 (TmpObj_DomainTransformedRaw, TmpCtrl_Row1, TmpCtrl_Col1, TmpCtrl_Row2, TmpCtrl_Col2)</l>
+<l>hom_mat2d_translate (TmpCtrl_MatrixIdentity, -TmpCtrl_Row1, -TmpCtrl_Col1, TmpCtrl_MatrixTranslation)</l>
+<l>hom_mat2d_compose (TmpCtrl_MatrixTranslation, TmpCtrl_MatrixIdentity, TmpCtrl_MatrixComposite)</l>
+<l>affine_trans_region (TmpObj_Domain, TmpObj_DomainTransformed, TmpCtrl_MatrixComposite, 'true')</l>
+<l>affine_trans_image (TmpObj_MonoReduced_OCR_02_0, TmpObj_ImageTransformed, TmpCtrl_MatrixComposite, 'constant', 'true')</l>
+<c>* </c>
+<l>dilation_circle (TmpObj_Domain, TmpObj_DomainExpanded, 45)</l>
+<l>expand_domain_gray (TmpObj_ImageTransformed, TmpObj_ImageTransformedExpanded, 45)</l>
+<l>reduce_domain (TmpObj_ImageTransformed, TmpObj_DomainTransformed, TmpObj_ImageTransformedReduced)</l>
+<l>crop_part (TmpObj_ImageTransformedReduced, TmpObj_MonoReduced_OCR_02_0, 0, 0, TmpCtrl_Col2-TmpCtrl_Col1+1, TmpCtrl_Row2-TmpCtrl_Row1+1)</l>
+<l>set_system ('clip_region', TmpCtrl_ClipRegion)</l>
+<l>find_text (TmpObj_MonoReduced_OCR_02_0, TextModel, TmpCtrl_ResultHandle_OCR_02_0)</l>
+<l>invert_image (TmpObj_MonoReduced_OCR_02_0, TmpObj_MonoInverted_OCR_02_0)</l>
+<l>get_text_object (Symbols_OCR_02_0, TmpCtrl_ResultHandle_OCR_02_0, 'all_lines')</l>
+<l>clear_text_result (TmpCtrl_ResultHandle_OCR_02_0)</l>
+<l>do_ocr_multi_class_mlp (Symbols_OCR_02_0, TmpObj_MonoInverted_OCR_02_0, OcrHandle, SymbolNames_OCR_02_0, Confidences_OCR_02_0)</l>
+<l>OCRChrs := SymbolNames_OCR_02_0</l>
+<l>OCRChrsConfidences := Confidences_OCR_02_0</l>
+<l>return ()</l>
+</body>
+<docu id="GetOCRChrs">
+<parameters>
+<parameter id="OCRChrs"/>
+<parameter id="OCRChrsConfidences"/>
+<parameter id="OcrHandle"/>
+<parameter id="ROI_OCR_uF"/>
+<parameter id="TextModel"/>
+<parameter id="TmpObj_Mono"/>
+</parameters>
+</docu>
+</procedure>
+</hdevelop>
